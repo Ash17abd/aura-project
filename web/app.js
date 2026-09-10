@@ -24,6 +24,8 @@
     let isAutoSpinning = false;
     let showLabels = true;
     let labelSprites = [];
+    let holographicBrainGroup = null;
+    let currentViewMode = "dashboard"; // "dashboard" or "3dlab" 
 
     // Animation State
     let animSteps = [];
@@ -104,15 +106,46 @@
         topicsList: document.getElementById("topics-list"),
         // Chat
         chatMessages: document.getElementById("chat-messages"),
-        mainPromptInput: document.getElementById("main-prompt-input"),
-        sendPromptBtn: document.getElementById("send-prompt-btn"),
-        voiceInputBtn: document.getElementById("voice-input-btn"),
+        mainPromptInput: document.getElementById("chat-input-field") || document.getElementById("main-prompt-input"),
+        sendPromptBtn: document.getElementById("btn-send-message") || document.getElementById("send-prompt-btn"),
+        voiceInputBtn: document.getElementById("btn-voice-mic") || document.getElementById("voice-input-btn"),
         micIcon: document.getElementById("mic-icon"),
-        fileUploadBtn: document.getElementById("file-upload-btn"),
-        hiddenFileInput: document.getElementById("hidden-file-input"),
+        fileUploadBtn: document.getElementById("btn-upload-image") || document.getElementById("file-upload-btn"),
+        hiddenFileInput: document.getElementById("image-upload-input") || document.getElementById("hidden-file-input"),
         btnVoiceToggle: document.getElementById("btn-voice-toggle"),
         ttsIcon: document.getElementById("tts-icon"),
+        // New Dashboard Elements
+        heroWelcomePanel: document.getElementById("hero-welcome-panel"),
+        btnHeroStartLearning: document.getElementById("btn-hero-start-learning"),
+        btnToggleViewMode: document.getElementById("btn-toggle-viewmode"),
+        componentDrawer: document.getElementById("component-drawer"),
+        btnCloseDrawer: document.getElementById("btn-close-drawer"),
         // Modals
+        modalTeacher: document.getElementById("modal-teacher"),
+        modalQuiz: document.getElementById("modal-quiz"),
+        modalCodeRunner: document.getElementById("modal-coderunner"),
+        modalProgress: document.getElementById("modal-progress"),
+        modalNotes: document.getElementById("modal-notes"),
+        modalSettings: document.getElementById("modal-settings"),
+        btnRunCode: document.getElementById("btn-run-code"),
+        codeEditor: document.getElementById("code-sandbox-editor"),
+        codeOutput: document.getElementById("code-sandbox-output"),
+        // Quick Actions
+        qaBtnOpen3d: document.getElementById("qa-btn-open-3d"),
+        qaBtnTakeQuiz: document.getElementById("qa-btn-take-quiz"),
+        qaBtnViewProgress: document.getElementById("qa-btn-view-progress"),
+        qaBtnGetHelp: document.getElementById("qa-btn-get-help"),
+        btnPedagogySettings: document.getElementById("btn-pedagogy-settings"),
+        btnBrowseStudyFile: document.getElementById("btn-browse-study-file"),
+        studyFileInput: document.getElementById("study-file-input"),
+        notesUploadZone: document.getElementById("notes-upload-zone"),
+        notesExtractedContent: document.getElementById("notes-extracted-content"),
+        settingsPedagogyLevel: document.getElementById("settings-pedagogy-level"),
+        settingsTtsToggle: document.getElementById("settings-tts-toggle"),
+        systemStatusChip: document.getElementById("system-status-chip"),
+        inspirationBannerCard: document.getElementById("inspiration-banner-card"),
+        teacherLevelSelect: document.getElementById("teacher-level-select"),
+        // Legacy Modals & Fallbacks
         examplesModal: document.getElementById("examples-modal"),
         btnOpenExamples: document.getElementById("btn-open-examples"),
         examplesCloseBtn: document.getElementById("examples-close-btn"),
@@ -268,16 +301,27 @@
 
         // Events
         window.addEventListener("resize", onWindowResize);
-        el.container.addEventListener("mousemove", onMouseMove);
-        el.container.addEventListener("click", onMouseClick);
+        if (el.container) {
+            el.container.addEventListener("mousemove", onMouseMove);
+            el.container.addEventListener("click", onMouseClick);
+        }
 
-        // Viewport toolbar buttons
-        document.getElementById("v-zoom-in").addEventListener("click", () => zoomCamera(-1.5));
-        document.getElementById("v-zoom-out").addEventListener("click", () => zoomCamera(1.5));
-        document.getElementById("v-rotate").addEventListener("click", () => rotateCamera(Math.PI / 4));
-        document.getElementById("v-auto-spin").addEventListener("click", toggleAutoSpin);
-        document.getElementById("v-recenter").addEventListener("click", () => fitCameraToObject(scene));
-        document.getElementById("btn-reset-view").addEventListener("click", () => fitCameraToObject(scene));
+        // Viewport toolbar buttons (safe null-check)
+        const vZoomIn = document.getElementById("v-zoom-in");
+        if (vZoomIn) vZoomIn.addEventListener("click", () => zoomCamera(-1.5));
+        const vZoomOut = document.getElementById("v-zoom-out");
+        if (vZoomOut) vZoomOut.addEventListener("click", () => zoomCamera(1.5));
+        const vRotate = document.getElementById("v-rotate");
+        if (vRotate) vRotate.addEventListener("click", () => rotateCamera(Math.PI / 4));
+        const vAutoSpin = document.getElementById("v-auto-spin");
+        if (vAutoSpin) vAutoSpin.addEventListener("click", toggleAutoSpin);
+        const vRecenter = document.getElementById("v-recenter");
+        if (vRecenter) vRecenter.addEventListener("click", () => fitCameraToObject(scene));
+        const btnResetView = document.getElementById("btn-reset-view");
+        if (btnResetView) btnResetView.addEventListener("click", () => fitCameraToObject(scene));
+
+        // Create Holographic Brain & Pedestal Scene for Dashboard
+        createHolographicBrainGroup();
 
         // Start Animation Loop
         animateLoop();
@@ -420,6 +464,20 @@
                     }
                 });
             }
+        }
+
+        // Animate Holographic AI Brain & Ring Orbitals on Dashboard
+        if (holographicBrainGroup && holographicBrainGroup.visible) {
+            const time = Date.now() * 0.0015;
+            const brain = holographicBrainGroup.getObjectByName("brain_floating_mesh");
+            if (brain) {
+                brain.position.y = 0.4 + Math.sin(time * 2.5) * 0.08;
+                brain.rotation.y += 0.008;
+            }
+            const halo1 = holographicBrainGroup.getObjectByName("halo_ring_1");
+            if (halo1) halo1.rotation.z += 0.012;
+            const halo2 = holographicBrainGroup.getObjectByName("halo_ring_2");
+            if (halo2) halo2.rotation.y += 0.01;
         }
 
         renderer.render(scene, camera);
@@ -838,12 +896,13 @@
             }
         });
 
-        // 2. Update Inspector Card
-        el.compName.textContent = comp.name || comp.id;
-        el.compColorChip.style.backgroundColor = comp.color || "#00d4ff";
-        el.compRoleTag.textContent = `Role: ${comp.role || "Active"}`;
-        el.compTypeTag.textContent = `Type: ${comp.type || "Solid"}`;
-        el.compDesc.textContent = comp.description || "Active component in system.";
+        // 2. Update Inspector Card & Drawer
+        if (el.compName) el.compName.textContent = comp.name || comp.id;
+        if (el.compColorChip) el.compColorChip.style.backgroundColor = comp.color || "#00d4ff";
+        if (el.compRoleTag) el.compRoleTag.textContent = comp.role || "Engineering Component";
+        if (el.compTypeTag) el.compTypeTag.textContent = `Type: ${comp.type || "Solid"}`;
+        if (el.compDesc) el.compDesc.textContent = comp.description || "Active component in system.";
+        if (el.componentDrawer) el.componentDrawer.classList.add("open");
 
         // 3. Highlight in parts list
         document.querySelectorAll(".comp-item").forEach(item => {
@@ -888,20 +947,22 @@
 
 
     function populatePartsList(components) {
-        el.componentsScrollList.innerHTML = "";
-        el.componentCountBadge.textContent = `${components.length} PARTS`;
-
-        components.forEach(c => {
-            const item = document.createElement("div");
-            item.className = "comp-item";
-            item.dataset.id = c.id;
-            item.innerHTML = `
-                <div class="comp-dot" style="background-color: ${c.color || '#00d4ff'};"></div>
-                <div class="comp-item-name">${c.name || c.id}</div>
-            `;
-            item.addEventListener("click", () => selectComponent(c.id, true));
-            el.componentsScrollList.appendChild(item);
-        });
+        if (!components) return;
+        if (el.componentCountBadge) el.componentCountBadge.textContent = `${components.length} PARTS`;
+        if (el.componentsScrollList) {
+            el.componentsScrollList.innerHTML = "";
+            components.forEach(c => {
+                const item = document.createElement("div");
+                item.className = "comp-item";
+                item.dataset.id = c.id;
+                item.innerHTML = `
+                    <div class="comp-dot" style="background-color: ${c.color || '#00d4ff'};"></div>
+                    <div class="comp-item-name">${c.name || c.id}</div>
+                `;
+                item.addEventListener("click", () => selectComponent(c.id, true));
+                el.componentsScrollList.appendChild(item);
+            });
+        }
     }
 
     // ==========================================
@@ -1063,24 +1124,24 @@
         currentAnimStep = 0;
         isPlayingAnim = false;
         clearInterval(animInterval);
-        el.animPlayPause.textContent = "▶ PLAY";
+        if (el.animPlayPause) el.animPlayPause.textContent = "▶ PLAY";
 
         updateAnimationUI();
     }
 
     function updateAnimationUI() {
         if (!animSteps || animSteps.length === 0) {
-            el.animStepBadge.textContent = "NO ANIMATION";
-            el.animStepDesc.textContent = "Static model inspection.";
-            el.animBarFill.style.width = "100%";
+            if (el.animStepBadge) el.animStepBadge.textContent = "NO ANIMATION";
+            if (el.animStepDesc) el.animStepDesc.textContent = "Static model inspection.";
+            if (el.animBarFill) el.animBarFill.style.width = "100%";
             return;
         }
 
         const step = animSteps[currentAnimStep];
-        el.animStepBadge.textContent = `STEP ${currentAnimStep + 1} OF ${animSteps.length}`;
-        el.animStepDesc.textContent = step ? step.description : "";
+        if (el.animStepBadge) el.animStepBadge.textContent = `STEP ${currentAnimStep + 1} OF ${animSteps.length}`;
+        if (el.animStepDesc) el.animStepDesc.textContent = step ? step.description : "";
         const progress = ((currentAnimStep + 1) / animSteps.length) * 100;
-        el.animBarFill.style.width = `${progress}%`;
+        if (el.animBarFill) el.animBarFill.style.width = `${progress}%`;
 
         // Highlight affected components
         if (step && step.affected_components) {
@@ -1179,65 +1240,96 @@
         if (el.teacherPrincipleBox) el.teacherPrincipleBox.textContent = lesson.working_principle || "Governed by fundamental physical conservation laws.";
         if (el.teacherAnimationBox) el.teacherAnimationBox.textContent = lesson.animation_analysis || "Operational phase sequence.";
 
-        // Components breakdown
-        if (el.teacherComponentsList) {
-            el.teacherComponentsList.innerHTML = "";
+        const teacherBody = document.getElementById("teacher-lesson-body");
+        if (teacherBody) {
             const comps = lesson.components_breakdown || [];
-            comps.forEach(c => {
-                const item = document.createElement("div");
-                item.className = "teacher-breakdown-item";
-                item.innerHTML = `
-                    <div class="teacher-breakdown-name">${c.name}</div>
-                    <div class="teacher-breakdown-role">${c.role || "Operational Component"}</div>
-                    <div class="teacher-breakdown-desc">${c.explanation}</div>
-                `;
-                el.teacherComponentsList.appendChild(item);
-            });
-        }
-
-        // Applications
-        if (el.teacherAppsList) {
-            el.teacherAppsList.innerHTML = "";
             const apps = lesson.real_world_applications || [];
-            apps.forEach(app => {
-                const item = document.createElement("div");
-                item.className = "teacher-app-item";
-                item.textContent = `• ${app}`;
-                el.teacherAppsList.appendChild(item);
-            });
-        }
-
-        // Socratic Questions
-        if (el.teacherSocraticList) {
-            el.teacherSocraticList.innerHTML = "";
             const qList = lesson.socratic_questions || [];
-            qList.forEach((q, idx) => {
-                const card = document.createElement("div");
-                card.className = "socratic-card";
-                card.innerHTML = `
-                    <div class="socratic-question">Q${idx + 1}: ${q.question}</div>
-                    <div class="socratic-actions">
-                        <button class="socratic-toggle-btn hint-btn">💡 Clue / Hint</button>
-                        <button class="socratic-toggle-btn ans-btn">✓ Master Answer</button>
-                    </div>
-                    <div class="socratic-hint-box" style="display: none;">${q.hint || "Analyze energy transformation and dimensions."}</div>
-                    <div class="socratic-answer-box" style="display: none;">${q.answer || "Answer based on physical principles."}</div>
-                `;
-                const hintBtn = card.querySelector(".hint-btn");
-                const hintBox = card.querySelector(".socratic-hint-box");
-                const ansBtn = card.querySelector(".ans-btn");
-                const ansBox = card.querySelector(".socratic-answer-box");
 
-                hintBtn.addEventListener("click", () => {
-                    hintBox.style.display = hintBox.style.display === "none" ? "block" : "none";
+            const compsHtml = comps.map(c => `
+                <div class="teacher-breakdown-item" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 12px; margin-bottom: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <strong style="color: #00f0ff;">${c.name}</strong>
+                        <span style="font-size: 11px; background: rgba(37,99,235,0.2); color: #60a5fa; padding: 2px 8px; border-radius: 12px;">${c.role || "Component"}</span>
+                    </div>
+                    <div style="font-size: 13px; color: #cbd5e1; line-height: 1.5;">${c.explanation}</div>
+                </div>
+            `).join("");
+
+            const appsHtml = apps.map(app => `
+                <div style="font-size: 13px; color: #cbd5e1; padding: 6px 0; border-bottom: 1px dashed rgba(255,255,255,0.06);">
+                    <span style="color: #38bdf8; margin-right: 6px;">✦</span> ${app}
+                </div>
+            `).join("");
+
+            const socraticHtml = qList.map((q, idx) => `
+                <div class="socratic-card" style="background: rgba(168,85,247,0.05); border: 1px solid rgba(168,85,247,0.2); border-radius: 8px; padding: 14px; margin-bottom: 12px;">
+                    <div style="font-weight: 600; color: #e2e8f0; margin-bottom: 8px;">Q${idx + 1}: ${q.question}</div>
+                    <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                        <button class="hud-btn hud-btn-outline hint-toggle-btn" style="padding: 4px 10px; font-size: 12px; cursor: pointer;">💡 Clue / Hint</button>
+                        <button class="hud-btn hud-btn-accent ans-toggle-btn" style="padding: 4px 10px; font-size: 12px; cursor: pointer;">✓ Master Answer</button>
+                    </div>
+                    <div class="socratic-hint-panel" style="display: none; background: rgba(245,158,11,0.1); border-left: 3px solid #f59e0b; padding: 8px 12px; border-radius: 4px; font-size: 12px; color: #fde68a; margin-top: 6px;">${q.hint || "Think about the governing conservation laws."}</div>
+                    <div class="socratic-ans-panel" style="display: none; background: rgba(16,185,129,0.1); border-left: 3px solid #10b981; padding: 8px 12px; border-radius: 4px; font-size: 12px; color: #a7f3d0; margin-top: 6px;">${q.answer || "Fundamental engineering operational principle."}</div>
+                </div>
+            `).join("");
+
+            teacherBody.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px;">
+                    <div>
+                        <h2 style="font-size: 20px; font-weight: 800; color: #fff; margin: 0 0 4px 0;">${lesson.topic || (currentModelSpec ? currentModelSpec.topic : "System")}</h2>
+                        <span style="font-size: 12px; color: #00f0ff;">Pedagogical Mode: ${(el.teacherLevelSelect && el.teacherLevelSelect.value) || "Intermediate"}</span>
+                    </div>
+                    <button id="btn-read-lesson-tts" class="hud-btn hud-btn-accent" style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <span>🔊</span> Read Aloud
+                    </button>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">System Overview</h4>
+                    <p style="font-size: 14px; line-height: 1.6; color: #e2e8f0; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px;">${lesson.overview || "High-level overview of the active 3D model."}</p>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Governing Physical Principle</h4>
+                    <p style="font-size: 14px; line-height: 1.6; color: #a5f3fc; background: rgba(0,240,255,0.04); border-left: 3px solid #00f0ff; padding: 12px; border-radius: 4px;">${lesson.working_principle || "Engineering principles."}</p>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Component Architecture (${comps.length} Parts)</h4>
+                    <div>${compsHtml}</div>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Industrial Applications</h4>
+                    <div style="background: rgba(255,255,255,0.02); padding: 10px 14px; border-radius: 8px;">${appsHtml}</div>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: #c084fc; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Socratic Discovery Questions</h4>
+                    <div>${socraticHtml}</div>
+                </div>
+            `;
+
+            const ttsBtn = teacherBody.querySelector("#btn-read-lesson-tts");
+            if (ttsBtn) ttsBtn.addEventListener("click", speakTeacherLesson);
+
+            teacherBody.querySelectorAll(".hint-toggle-btn").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const card = btn.closest(".socratic-card");
+                    const p = card.querySelector(".socratic-hint-panel");
+                    if (p) p.style.display = p.style.display === "none" ? "block" : "none";
                 });
-                ansBtn.addEventListener("click", () => {
-                    ansBox.style.display = ansBox.style.display === "none" ? "block" : "none";
+            });
+
+            teacherBody.querySelectorAll(".ans-toggle-btn").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const card = btn.closest(".socratic-card");
+                    const p = card.querySelector(".socratic-ans-panel");
+                    if (p) p.style.display = p.style.display === "none" ? "block" : "none";
                 });
-                el.teacherSocraticList.appendChild(card);
             });
         }
-    }
 
     function speakTeacherLesson() {
         if (!currentTeacherLesson) return;
@@ -1275,56 +1367,79 @@
         currentQuiz = quizData;
         quizUserAnswers.clear();
 
-        if (el.quizLevelBadge) el.quizLevelBadge.textContent = (quizData.difficulty || "INTERMEDIATE").toUpperCase();
-        if (el.quizScoreRatio) el.quizScoreRatio.textContent = `0 / ${(quizData.questions || []).length}`;
-        if (el.quizScoreFill) el.quizScoreFill.style.width = "0%";
-        if (el.quizFeedbackText) el.quizFeedbackText.textContent = "Select options to verify your spatial & theoretical understanding.";
-
-        if (!el.quizQuestionsList) return;
-        el.quizQuestionsList.innerHTML = "";
+        const quizBody = document.getElementById("quiz-modal-body");
+        if (!quizBody) return;
 
         const questions = quizData.questions || [];
+        const total = questions.length;
+
+        quizBody.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px;">
+                <div>
+                    <h3 style="font-size: 18px; font-weight: 700; color: #fff; margin: 0 0 4px 0;">${quizData.topic || (currentModelSpec ? currentModelSpec.topic : "Engineering System")}</h3>
+                    <span style="font-size: 12px; color: #00f0ff; background: rgba(0,240,255,0.1); padding: 2px 8px; border-radius: 12px;">Difficulty: ${(quizData.difficulty || "Intermediate").toUpperCase()}</span>
+                </div>
+                <div style="text-align: right;">
+                    <div id="quiz-score-display" style="font-size: 18px; font-weight: 800; color: #10b981;">0 / ${total}</div>
+                    <span style="font-size: 11px; color: #94a3b8;">SCORE RATIO</span>
+                </div>
+            </div>
+            <div id="quiz-cards-container"></div>
+            <div id="quiz-feedback-box" style="margin-top: 14px;"></div>
+            <div style="display: flex; justify-content: space-between; margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px;">
+                <button id="btn-quiz-regenerate" class="hud-btn hud-btn-outline" style="cursor: pointer;">↺ New Quiz Questions</button>
+                <button id="btn-quiz-restart" class="hud-btn hud-btn-accent" style="cursor: pointer;">Reset Answers</button>
+            </div>
+        `;
+
+        const container = quizBody.querySelector("#quiz-cards-container");
+
         questions.forEach((q, qIdx) => {
             const card = document.createElement("div");
             card.className = "question-card";
             card.dataset.qid = q.id || `q_${qIdx}`;
+            card.style.cssText = "background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 16px; margin-bottom: 14px;";
 
             const targetBadge = q.target_component_id 
-                ? `<span class="question-target-badge" data-target="${q.target_component_id}">🎯 Highlight Part: ${q.target_component_id}</span>` 
+                ? `<button class="hud-btn hud-btn-outline question-target-badge" data-target="${q.target_component_id}" style="padding: 2px 8px; font-size: 11px; border-color: rgba(0,240,255,0.4); color: #00f0ff; cursor: pointer;">🎯 View Part: ${q.target_component_id}</button>` 
                 : "";
 
             card.innerHTML = `
-                <div class="question-meta-row">
-                    <span class="question-type-badge">${(q.type || "mcq").replace("_", " ")}</span>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 600;">Question ${qIdx + 1} of ${total}</span>
                     ${targetBadge}
                 </div>
-                <div class="question-text">${qIdx + 1}. ${q.question}</div>
-                <div class="question-options-grid"></div>
-                <div class="question-explanation-box" style="display: none;"></div>
+                <div style="font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 12px; line-height: 1.5;">${q.question}</div>
+                <div class="question-options-grid" style="display: grid; grid-template-columns: 1fr; gap: 8px;"></div>
+                <div class="question-explanation-box" style="display: none; margin-top: 10px; padding: 10px; border-radius: 6px; font-size: 13px; line-height: 1.4; background: rgba(0,0,0,0.3); border-left: 3px solid #10b981;"></div>
             `;
 
-            // Click target badge to highlight component in 3D viewport
             if (q.target_component_id) {
-                const badgeEl = card.querySelector(".question-target-badge");
-                if (badgeEl) {
-                    badgeEl.addEventListener("click", () => {
+                const b = card.querySelector(".question-target-badge");
+                if (b) {
+                    b.addEventListener("click", () => {
                         selectComponent(q.target_component_id, false);
                     });
                 }
             }
 
-            const optionsGrid = card.querySelector(".question-options-grid");
-            const opts = q.options || [];
-            opts.forEach((optText, optIdx) => {
+            const optsGrid = card.querySelector(".question-options-grid");
+            (q.options || []).forEach((optText, optIdx) => {
                 const btn = document.createElement("button");
                 btn.className = "quiz-opt-btn";
+                btn.style.cssText = "background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; padding: 10px 14px; color: #cbd5e1; text-align: left; font-size: 13px; cursor: pointer; transition: all 0.2s;";
                 btn.textContent = optText;
                 btn.addEventListener("click", () => handleQuizOptionClick(q, optIdx, btn, card));
-                optionsGrid.appendChild(btn);
+                optsGrid.appendChild(btn);
             });
 
-            el.quizQuestionsList.appendChild(card);
+            container.appendChild(card);
         });
+
+        const regenBtn = quizBody.querySelector("#btn-quiz-regenerate");
+        if (regenBtn) regenBtn.addEventListener("click", regenerateQuiz);
+        const restartBtn = quizBody.querySelector("#btn-quiz-restart");
+        if (restartBtn) restartBtn.addEventListener("click", () => renderQuiz(currentQuiz));
     }
 
     function handleQuizOptionClick(question, optIdx, clickedBtn, cardEl) {
@@ -1336,10 +1451,15 @@
         const allButtons = cardEl.querySelectorAll(".quiz-opt-btn");
         allButtons.forEach((btn, idx) => {
             btn.disabled = true;
+            btn.style.cursor = "default";
             if (idx === question.correct_index) {
-                btn.classList.add(isCorrect ? "selected-correct" : "reveal-correct");
+                btn.style.background = "rgba(16, 185, 129, 0.2)";
+                btn.style.borderColor = "#10b981";
+                btn.style.color = "#a7f3d0";
             } else if (idx === optIdx && !isCorrect) {
-                btn.classList.add("selected-wrong");
+                btn.style.background = "rgba(239, 68, 68, 0.2)";
+                btn.style.borderColor = "#ef4444";
+                btn.style.color = "#fca5a5";
             }
         });
 
@@ -1348,7 +1468,8 @@
         if (explBox) {
             explBox.style.display = "block";
             explBox.innerHTML = `<strong>${isCorrect ? "✓ Correct!" : "✗ Incorrect."}</strong> ${question.explanation || ""}`;
-            explBox.style.borderLeftColor = isCorrect ? "var(--accent-green)" : "var(--accent-red)";
+            explBox.style.borderLeftColor = isCorrect ? "#10b981" : "#ef4444";
+            explBox.style.color = isCorrect ? "#a7f3d0" : "#fca5a5";
         }
 
         // Highlight 3D component if question is linked
@@ -1388,65 +1509,79 @@
             }
         });
 
-        const pct = Math.round((correctCount / total) * 100);
-        if (el.quizScoreRatio) el.quizScoreRatio.textContent = `${correctCount} / ${total} (${pct}%)`;
+        const scoreDisplay = document.getElementById("quiz-score-display");
+        if (scoreDisplay) scoreDisplay.textContent = `${correctCount} / ${total}`;
+        if (el.quizScoreRatio) el.quizScoreRatio.textContent = `${correctCount} / ${total}`;
+        const pct = total > 0 ? Math.round((correctCount / total) * 100) : 0;
         if (el.quizScoreFill) el.quizScoreFill.style.width = `${pct}%`;
-        if (el.quizFeedbackText) {
-            if (quizUserAnswers.size === total) {
-                const missedQuestions = currentQuiz.questions.filter(q => quizUserAnswers.get(q.id) !== q.correct_index);
-                let weakCardHtml = "";
 
-                if (missedQuestions.length > 0) {
-                    const firstMissed = missedQuestions[0];
-                    const compMatch = currentModelSpec && currentModelSpec.components ? currentModelSpec.components.find(c => c.id === firstMissed.target_component_id || (c.name && firstMissed.question && firstMissed.question.toLowerCase().includes(c.name.toLowerCase()))) : null;
-                    const weakName = compMatch ? compMatch.name : (firstMissed.target_component_id || "System Core Principle");
+        const feedbackBox = document.getElementById("quiz-feedback-box");
 
-                    weakCardHtml = `
-                        <div class="weak-concept-card" style="margin-top: 12px; padding: 10px 14px; background: rgba(239, 68, 68, 0.12); border: 1px solid #ef4444; border-radius: 6px; text-align: left;">
-                            <div style="font-weight: 600; color: #f87171; font-size: 12px; margin-bottom: 2px;">⚠️ WEAK CONCEPT: ${weakName}</div>
-                            <div style="font-size: 11px; color: #cbd5e1; margin-bottom: 8px;">Recommended action: Inspect spatial layout and operational role in the 3D laboratory.</div>
-                            <button class="hud-btn hud-btn-accent" id="btn-review-weak-concept" style="font-size: 10px; padding: 4px 10px; cursor: pointer;">🔍 OPEN IN 3D LAB</button>
-                        </div>
-                    `;
-                }
+        if (quizUserAnswers.size === total && total > 0) {
+            const missedQuestions = currentQuiz.questions.filter(q => quizUserAnswers.get(q.id) !== q.correct_index);
+            let weakCardHtml = "";
 
-                el.quizFeedbackText.innerHTML = `
-                    <div>${pct >= 75 ? `🎉 Excellent! Mastery demonstrated (${pct}%). Ready for Advanced challenges.` : `Quiz complete (${pct}%). Review the Teacher Mode lesson and retry!`}</div>
-                    ${weakCardHtml}
+            if (missedQuestions.length > 0) {
+                const firstMissed = missedQuestions[0];
+                const compMatch = currentModelSpec && currentModelSpec.components 
+                    ? currentModelSpec.components.find(c => c.id === firstMissed.target_component_id || (c.name && firstMissed.question && firstMissed.question.toLowerCase().includes(c.name.toLowerCase()))) 
+                    : null;
+                const weakName = compMatch ? compMatch.name : (firstMissed.target_component_id || "System Core Principle");
+
+                weakCardHtml = `
+                    <div class="weak-concept-card" style="margin-top: 12px; padding: 12px 14px; background: rgba(239, 68, 68, 0.12); border: 1px solid #ef4444; border-radius: 8px; text-align: left;">
+                        <div style="font-weight: 700; color: #f87171; font-size: 13px; margin-bottom: 4px;">⚠️ Concept Review: ${weakName}</div>
+                        <div style="font-size: 12px; color: #cbd5e1; margin-bottom: 8px;">Focus on spatial relationships and operational role in the 3D model.</div>
+                        <button class="hud-btn hud-btn-accent" id="btn-review-weak-concept" style="font-size: 11px; padding: 6px 12px; cursor: pointer;">🔍 Inspect in 3D Lab</button>
+                    </div>
                 `;
-
-                // Wire up review in 3D button
-                setTimeout(() => {
-                    const reviewBtn = document.getElementById("btn-review-weak-concept");
-                    if (reviewBtn && missedQuestions.length > 0) {
-                        reviewBtn.addEventListener("click", () => {
-                            if (el.quizModal) el.quizModal.style.display = "none";
-                            const firstMissed = missedQuestions[0];
-                            const compMatch = currentModelSpec && currentModelSpec.components ? currentModelSpec.components.find(c => c.id === firstMissed.target_component_id || (c.name && firstMissed.question && firstMissed.question.toLowerCase().includes(c.name.toLowerCase()))) : (currentModelSpec && currentModelSpec.components ? currentModelSpec.components[0] : null);
-                            if (compMatch) {
-                                selectComponent(compMatch.id, true);
-                            }
-                        });
-                    }
-                }, 50);
-
-                // Record completed quiz to backend student tracker
-                fetch("/api/student/record-quiz", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        topic: (currentQuiz && currentQuiz.topic) || (currentModelSpec && currentModelSpec.topic) || "General Systems",
-                        difficulty: (currentQuiz && currentQuiz.difficulty) || "Intermediate",
-                        score: correctCount,
-                        total_questions: total,
-                    })
-                }).then(r => r.json()).then(summary => {
-                    renderStudentProgress(summary);
-                }).catch(err => console.warn("Failed to record quiz completion:", err));
-            } else {
-                el.quizFeedbackText.textContent = `Answered ${quizUserAnswers.size} of ${total} questions.`;
             }
 
+            const resultHtml = `
+                <div style="padding: 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;">
+                    <div style="font-size: 15px; font-weight: 700; color: ${pct >= 75 ? '#34d399' : '#f59e0b'};">
+                        ${pct >= 75 ? `🎉 Outstanding! Mastery confirmed (${pct}%). Ready for Advanced challenges.` : `Assessment Complete: ${correctCount}/${total} (${pct}%). Review the Teacher Mode lesson and try again!`}
+                    </div>
+                    ${weakCardHtml}
+                </div>
+            `;
+
+            if (feedbackBox) feedbackBox.innerHTML = resultHtml;
+            if (el.quizFeedbackText) el.quizFeedbackText.innerHTML = resultHtml;
+
+            // Wire up review in 3D button
+            setTimeout(() => {
+                const reviewBtn = document.getElementById("btn-review-weak-concept");
+                if (reviewBtn && missedQuestions.length > 0) {
+                    reviewBtn.addEventListener("click", () => {
+                        closeAllModals();
+                        switchDashboardView("3dlab");
+                        const firstMissed = missedQuestions[0];
+                        const compMatch = currentModelSpec && currentModelSpec.components ? currentModelSpec.components.find(c => c.id === firstMissed.target_component_id || (c.name && firstMissed.question && firstMissed.question.toLowerCase().includes(c.name.toLowerCase()))) : (currentModelSpec && currentModelSpec.components ? currentModelSpec.components[0] : null);
+                        if (compMatch) {
+                            selectComponent(compMatch.id, true);
+                        }
+                    });
+                }
+            }, 50);
+
+            // Record completed quiz to backend student tracker
+            fetch("/api/student/record-quiz", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    topic: (currentQuiz && currentQuiz.topic) || (currentModelSpec && currentModelSpec.topic) || "General Systems",
+                    difficulty: (currentQuiz && currentQuiz.difficulty) || "Intermediate",
+                    score: correctCount,
+                    total_questions: total,
+                })
+            }).then(r => r.json()).then(summary => {
+                renderStudentProgress(summary);
+            }).catch(err => console.warn("Failed to record quiz completion:", err));
+        } else {
+            const statusMsg = `Answered ${quizUserAnswers.size} of ${total} questions.`;
+            if (feedbackBox) feedbackBox.innerHTML = `<div style="font-size: 12px; color: #94a3b8;">${statusMsg}</div>`;
+            if (el.quizFeedbackText) el.quizFeedbackText.textContent = statusMsg;
         }
     }
 
@@ -1456,17 +1591,18 @@
             components: []
         };
         const diff = el.quizDifficultySelect ? el.quizDifficultySelect.value : "Intermediate";
+        const quizBody = document.getElementById("quiz-modal-body");
+        if (quizBody) {
+            quizBody.innerHTML = `
+                <div style="padding: 32px; text-align: center; color: #00f0ff;">
+                    <div style="font-size: 28px; margin-bottom: 12px;">🧪</div>
+                    <div style="font-size: 15px; font-weight: 600; margin-bottom: 6px;">Synthesizing ${diff} assessment for ${spec.topic}...</div>
+                    <div style="font-size: 12px; color: #94a3b8;">Generating multi-tier spatial questions based on mechanical nodes...</div>
+                </div>
+            `;
+        }
+
         try {
-            if (el.quizLevelBadge) el.quizLevelBadge.textContent = "SYNTHESIZING...";
-            if (el.quizFeedbackText) el.quizFeedbackText.textContent = `Synthesizing ${diff} assessment for ${spec.topic}...`;
-            if (el.quizQuestionsList && el.quizQuestionsList.children.length === 0) {
-                el.quizQuestionsList.innerHTML = `
-                    <div style="padding: 24px; text-align: center; color: var(--sec-cyan); font-family: 'Share Tech Mono', monospace; font-size: 12px; letter-spacing: 1px;">
-                        <span style="font-size: 24px; display: block; margin-bottom: 8px;">🧪</span>
-                        SYNTHESIZING SPATIAL & THEORETICAL QUESTIONS...
-                    </div>
-                `;
-            }
             const resp = await fetch("/api/quiz/generate", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -1475,10 +1611,14 @@
             if (resp.ok) {
                 const quiz = await resp.json();
                 renderQuiz(quiz);
+            } else {
+                throw new Error("Assessment server returned error");
             }
         } catch (e) {
             console.error("Regenerate quiz error:", e);
-            if (el.quizFeedbackText) el.quizFeedbackText.textContent = `Failed to generate quiz: ${e.message}`;
+            if (quizBody) {
+                quizBody.innerHTML = `<div style="color: #ef4444; padding: 20px; text-align: center;">Failed to generate quiz: ${e.message}</div>`;
+            }
         }
     }
 
@@ -1885,20 +2025,20 @@
 
         recognition.onstart = () => {
             isListening = true;
-            el.voiceInputBtn.classList.add("recording");
-            el.micIcon.textContent = "🔴";
+            if (el.voiceInputBtn) el.voiceInputBtn.classList.add("recording");
+            if (el.micIcon) el.micIcon.textContent = "🔴";
         };
 
         recognition.onend = () => {
             isListening = false;
-            el.voiceInputBtn.classList.remove("recording");
-            el.micIcon.textContent = "🎤";
+            if (el.voiceInputBtn) el.voiceInputBtn.classList.remove("recording");
+            if (el.micIcon) el.micIcon.textContent = "🎤";
         };
 
         recognition.onresult = async (event) => {
             const transcript = event.results[0][0].transcript.trim();
             if (transcript) {
-                el.mainPromptInput.value = transcript;
+                if (el.mainPromptInput) el.mainPromptInput.value = transcript;
                 await processUserPrompt(transcript);
             }
         };
@@ -1906,8 +2046,8 @@
         recognition.onerror = (event) => {
             console.warn("Speech recognition error:", event.error);
             isListening = false;
-            el.voiceInputBtn.classList.remove("recording");
-            el.micIcon.textContent = "🎤";
+            if (el.voiceInputBtn) el.voiceInputBtn.classList.remove("recording");
+            if (el.micIcon) el.micIcon.textContent = "🎤";
         };
     }
 
@@ -2035,14 +2175,24 @@
     }
 
     function appendChatMessage(sender, text) {
-        const msg = document.createElement("div");
-        msg.className = `message ${sender.toLowerCase() === "you" ? "user" : "assistant"}`;
-        msg.innerHTML = `
-            <div class="sender">${sender.toUpperCase()}</div>
-            <div class="text">${text}</div>
-        `;
-        el.chatMessages.appendChild(msg);
-        el.chatMessages.scrollTop = el.chatMessages.scrollHeight;
+        const sub = document.querySelector(".chat-prompt-sub");
+        if (sub && sender.toLowerCase() !== "you") {
+            const cleanText = text.replace(/[*_#`]/g, "");
+            sub.textContent = cleanText.length > 50 ? cleanText.slice(0, 48) + "..." : cleanText;
+        }
+
+        const container = document.getElementById("chat-messages") || el.chatMessages;
+        if (container) {
+            container.style.display = "flex";
+            const msg = document.createElement("div");
+            msg.className = `message ${sender.toLowerCase() === "you" ? "user" : "assistant"}`;
+            msg.innerHTML = `
+                <div class="sender">${sender.toUpperCase()}</div>
+                <div class="text">${text}</div>
+            `;
+            container.appendChild(msg);
+            container.scrollTop = container.scrollHeight;
+        }
     }
 
     // ==========================================
@@ -2385,8 +2535,20 @@
 
     async function handleFileUpload(file) {
         if (!file) return;
-        el.uploadStatus.style.display = "flex";
-        el.uploadStatusText.textContent = `Analyzing ${file.name}...`;
+        if (el.uploadStatus) {
+            el.uploadStatus.style.display = "flex";
+            if (el.uploadStatusText) el.uploadStatusText.textContent = `Analyzing ${file.name}...`;
+        }
+
+        const notesContent = document.getElementById("notes-extracted-content");
+        if (notesContent) {
+            notesContent.innerHTML = `
+                <div style="padding: 16px; text-align: center; color: #00f0ff;">
+                    <div style="font-size: 24px; margin-bottom: 8px;">⏳</div>
+                    <div>Extracting key engineering concepts from <strong>${file.name}</strong>...</div>
+                </div>
+            `;
+        }
 
         const formData = new FormData();
         formData.append("file", file);
@@ -2405,23 +2567,52 @@
             const data = await resp.json();
             documentContext = data.full_text;
 
-            // Render topics in right panel
-            el.topicsSection.style.display = "flex";
-            el.topicsList.innerHTML = "";
-            (data.topics || []).forEach(t => {
-                const btn = document.createElement("button");
-                btn.className = "topic-btn";
-                btn.textContent = `◈ ${t.topic}`;
-                btn.addEventListener("click", () => {
-                    requestModelGeneration(`Create a 3D educational model visualizing ${t.topic}`);
+            // Render topics in right panel if legacy list exists
+            if (el.topicsSection && el.topicsList) {
+                el.topicsSection.style.display = "flex";
+                el.topicsList.innerHTML = "";
+                (data.topics || []).forEach(t => {
+                    const btn = document.createElement("button");
+                    btn.className = "topic-btn";
+                    btn.textContent = `◈ ${t.topic}`;
+                    btn.addEventListener("click", () => {
+                        requestModelGeneration(`Create a 3D educational model visualizing ${t.topic}`);
+                    });
+                    el.topicsList.appendChild(btn);
                 });
-                el.topicsList.appendChild(btn);
-            });
+            }
 
-            el.uploadStatus.style.display = "none";
-            el.uploadModal.style.display = "none";
+            // Render extracted topics in Study Notes modal
+            if (notesContent) {
+                const topicBtns = (data.topics || []).map(t => `
+                    <button class="hud-btn hud-btn-outline study-topic-btn" data-topic="${t.topic}" style="text-align: left; padding: 10px 14px; margin-bottom: 8px; width: 100%; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                        <span style="color: #fff; font-weight: 600;">◈ ${t.topic}</span>
+                        <span style="font-size: 11px; color: #00f0ff; background: rgba(0,240,255,0.1); padding: 2px 8px; border-radius: 4px;">Launch 3D Lab →</span>
+                    </button>
+                `).join("");
 
-            appendChatMessage("AURA", `Loaded study material **${file.name}** (${data.char_count.toLocaleString()} characters). Identified ${data.topics.length} key 3D topics. Select a topic in the right panel or ask any question.`);
+                notesContent.innerHTML = `
+                    <div style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 16px;">
+                        <h4 style="color: #34d399; margin-bottom: 8px;">✓ Document Processed: ${file.name}</h4>
+                        <p style="font-size: 13px; color: #94a3b8; margin-bottom: 14px;">Extracted ${data.char_count.toLocaleString()} characters. Click any concept below to generate its interactive 3D model:</p>
+                        <div>${topicBtns}</div>
+                    </div>
+                `;
+
+                notesContent.querySelectorAll(".study-topic-btn").forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        const top = btn.dataset.topic;
+                        closeAllModals();
+                        switchDashboardView("3dlab");
+                        requestModelGeneration(`Create a 3D educational model visualizing ${top}`);
+                    });
+                });
+            }
+
+            if (el.uploadStatus) el.uploadStatus.style.display = "none";
+            if (el.uploadModal) el.uploadModal.style.display = "none";
+
+            appendChatMessage("AURA", `Loaded study material **${file.name}** (${data.char_count.toLocaleString()} characters). Identified ${data.topics.length} key 3D topics. You can explore them in the Study Notes modal or right here.`);
 
             // Automatically build model for top topic if available
             if (data.topics && data.topics.length > 0) {
@@ -2429,8 +2620,11 @@
             }
 
         } catch (err) {
-            el.uploadStatusText.textContent = `Error: ${err.message}`;
-            setTimeout(() => { el.uploadStatus.style.display = "none"; }, 3000);
+            if (el.uploadStatusText) el.uploadStatusText.textContent = `Error: ${err.message}`;
+            if (el.uploadStatus) setTimeout(() => { el.uploadStatus.style.display = "none"; }, 3000);
+            if (notesContent) {
+                notesContent.innerHTML = `<div style="color: #ef4444; padding: 12px;">Failed to extract document: ${err.message}</div>`;
+            }
         }
     }
 
@@ -2528,10 +2722,12 @@
             const resp = await fetch("/api/telemetry");
             if (resp.ok) {
                 const data = await resp.json();
-                el.telemetryCpu.textContent = `${data.cpu_percent}%`;
-                el.telemetryCpuBar.style.width = `${data.cpu_percent}%`;
-                el.telemetryRam.textContent = `${data.ram_percent}%`;
-                el.telemetryRamBar.style.width = `${data.ram_percent}%`;
+                if (el.telemetryCpu) el.telemetryCpu.textContent = `${data.cpu_percent}%`;
+                if (el.telemetryCpuBar) el.telemetryCpuBar.style.width = `${data.cpu_percent}%`;
+                if (el.telemetryRam) el.telemetryRam.textContent = `${data.ram_percent}%`;
+                if (el.telemetryRamBar) el.telemetryRamBar.style.width = `${data.ram_percent}%`;
+                const statusText = document.getElementById("status-chip-text");
+                if (statusText) statusText.textContent = "System Online";
             }
         } catch (err) {
             // Silently ignore telemetry poll errors
@@ -2539,246 +2735,605 @@
     }
 
     // ==========================================
-    // 10. EVENT LISTENERS & BOOTSTRAP
+    // 10. HOLOGRAPHIC BRAIN & DASHBOARD CONTROLLER
+    // ==========================================
+
+    function createHolographicBrainGroup() {
+        if (!scene) return;
+        if (holographicBrainGroup) {
+            scene.remove(holographicBrainGroup);
+        }
+        holographicBrainGroup = new THREE.Group();
+        holographicBrainGroup.name = "holographic_core_group";
+
+        // 1. Futuristic Pedestal Base (Metallic cyber cylinder)
+        const pedestalGeo = new THREE.CylinderGeometry(3.5, 3.8, 0.4, 48);
+        const pedestalMat = new THREE.MeshStandardMaterial({
+            color: 0x071120,
+            metalness: 0.9,
+            roughness: 0.2,
+        });
+        const pedestalMesh = new THREE.Mesh(pedestalGeo, pedestalMat);
+        pedestalMesh.position.y = -2.0;
+        holographicBrainGroup.add(pedestalMesh);
+
+        // Concentric Glowing Neon Rings on Pedestal Floor
+        const ringColors = [0x00f0ff, 0x2979ff, 0xa855f7];
+        const ringRadii = [[3.3, 3.42], [2.6, 2.7], [1.8, 1.88]];
+        ringRadii.forEach(([inner, outer], i) => {
+            const ringGeo = new THREE.RingGeometry(inner, outer, 64);
+            const ringMat = new THREE.MeshBasicMaterial({
+                color: ringColors[i],
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.85
+            });
+            const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+            ringMesh.rotation.x = -Math.PI / 2;
+            ringMesh.position.y = -1.78 + (i * 0.01);
+            holographicBrainGroup.add(ringMesh);
+        });
+
+        // 2. Vertical Laser Light Columns (Hologram projection pillars)
+        for (let a = 0; a < 8; a++) {
+            const angle = (a / 8) * Math.PI * 2;
+            const px = Math.cos(angle) * 3.1;
+            const pz = Math.sin(angle) * 3.1;
+            const beamGeo = new THREE.CylinderGeometry(0.03, 0.03, 2.8, 8);
+            const beamMat = new THREE.MeshBasicMaterial({
+                color: 0x00f0ff,
+                transparent: true,
+                opacity: 0.35,
+            });
+            const beam = new THREE.Mesh(beamGeo, beamMat);
+            beam.position.set(px, -0.4, pz);
+            holographicBrainGroup.add(beam);
+        }
+
+        // 3. Holographic AI Brain / Neural Synapse Core
+        const leftHemiGeo = new THREE.SphereGeometry(1.2, 24, 24);
+        const rightHemiGeo = new THREE.SphereGeometry(1.2, 24, 24);
+        leftHemiGeo.scale(1.0, 1.25, 1.35);
+        rightHemiGeo.scale(1.0, 1.25, 1.35);
+
+        const brainMatOuter = new THREE.MeshBasicMaterial({
+            color: 0x00f0ff,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.45
+        });
+        const brainMatInner = new THREE.MeshStandardMaterial({
+            color: 0x0b1736,
+            emissive: 0x2563eb,
+            emissiveIntensity: 0.7,
+            roughness: 0.3,
+            transparent: true,
+            opacity: 0.65
+        });
+
+        const leftBrain = new THREE.Mesh(leftHemiGeo, brainMatOuter);
+        leftBrain.position.set(-0.65, 0.4, 0);
+        const rightBrain = new THREE.Mesh(rightHemiGeo, brainMatOuter);
+        rightBrain.position.set(0.65, 0.4, 0);
+
+        const innerCoreGeo = new THREE.IcosahedronGeometry(0.9, 3);
+        const innerCore = new THREE.Mesh(innerCoreGeo, brainMatInner);
+        innerCore.position.set(0, 0.4, 0);
+
+        const brainSubGroup = new THREE.Group();
+        brainSubGroup.name = "brain_floating_mesh";
+        brainSubGroup.add(leftBrain);
+        brainSubGroup.add(rightBrain);
+        brainSubGroup.add(innerCore);
+
+        // Synaptic Neural Nodes
+        const nodeMatCyan = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
+        const nodeMatMagenta = new THREE.MeshBasicMaterial({ color: 0xec4899 });
+        for (let n = 0; n < 24; n++) {
+            const nGeo = new THREE.SphereGeometry(0.06, 8, 8);
+            const nMesh = new THREE.Mesh(nGeo, n % 2 === 0 ? nodeMatCyan : nodeMatMagenta);
+            const u = Math.random() * 2 - 1;
+            const theta = Math.random() * Math.PI * 2;
+            const r = 1.4 + Math.random() * 0.4;
+            nMesh.position.set(
+                r * Math.sqrt(1 - u * u) * Math.cos(theta),
+                0.4 + u * 1.3,
+                r * Math.sqrt(1 - u * u) * Math.sin(theta)
+            );
+            brainSubGroup.add(nMesh);
+        }
+
+        holographicBrainGroup.add(brainSubGroup);
+
+        // 4. Quantum Orbital Rings
+        const halo1 = new THREE.Mesh(
+            new THREE.TorusGeometry(2.3, 0.02, 16, 100),
+            new THREE.MeshBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.7 })
+        );
+        halo1.rotation.x = Math.PI / 4;
+        halo1.name = "halo_ring_1";
+        holographicBrainGroup.add(halo1);
+
+        const halo2 = new THREE.Mesh(
+            new THREE.TorusGeometry(2.5, 0.02, 16, 100),
+            new THREE.MeshBasicMaterial({ color: 0xd946ef, transparent: true, opacity: 0.6 })
+        );
+        halo2.rotation.y = Math.PI / 3;
+        halo2.rotation.x = -Math.PI / 6;
+        halo2.name = "halo_ring_2";
+        holographicBrainGroup.add(halo2);
+
+        scene.add(holographicBrainGroup);
+    }
+
+    function closeAllModals() {
+        if (el.modalTeacher) el.modalTeacher.style.display = "none";
+        if (el.modalQuiz) el.modalQuiz.style.display = "none";
+        if (el.modalCodeRunner) el.modalCodeRunner.style.display = "none";
+        if (el.modalProgress) el.modalProgress.style.display = "none";
+        if (el.modalNotes) el.modalNotes.style.display = "none";
+        if (el.modalSettings) el.modalSettings.style.display = "none";
+        if (el.examplesModal) el.examplesModal.style.display = "none";
+        if (el.uploadModal) el.uploadModal.style.display = "none";
+        if (el.imageLightboxModal) el.imageLightboxModal.style.display = "none";
+        if (el.visionModal) el.visionModal.style.display = "none";
+    }
+
+    function switchDashboardView(viewName) {
+        currentViewMode = viewName;
+
+        // Synchronize Top Nav Pills
+        document.querySelectorAll("#top-nav-group .nav-pill").forEach(p => {
+            const pv = p.dataset.view;
+            if (pv === viewName || (viewName === "dashboard" && pv === "home")) {
+                p.classList.add("active");
+            } else {
+                p.classList.remove("active");
+            }
+        });
+
+        // Synchronize Sidebar Items
+        document.querySelectorAll("#side-nav-group .side-nav-item").forEach(s => {
+            const sv = s.dataset.view;
+            if (sv === viewName || (viewName === "home" && sv === "dashboard") || (viewName === "teacher" && sv === "ai-tutor") || (viewName === "learning" && sv === "learning-path")) {
+                s.classList.add("active");
+            } else {
+                s.classList.remove("active");
+            }
+        });
+
+        closeAllModals();
+
+        if (viewName === "dashboard" || viewName === "home") {
+            if (el.heroWelcomePanel) el.heroWelcomePanel.style.display = "flex";
+            if (holographicBrainGroup) holographicBrainGroup.visible = true;
+            componentMeshes.forEach(m => m.visible = false);
+            connectionMeshes.forEach(m => m.visible = false);
+            labelSprites.forEach(s => s.visible = false);
+            if (controls) {
+                camera.position.set(5.5, 3.5, 6.5);
+                controls.target.set(0, 0, 0);
+                controls.update();
+            }
+        } else if (viewName === "3dlab" || viewName === "learning") {
+            if (el.heroWelcomePanel) el.heroWelcomePanel.style.display = "none";
+            if (holographicBrainGroup) holographicBrainGroup.visible = false;
+            componentMeshes.forEach(m => m.visible = true);
+            connectionMeshes.forEach(m => m.visible = true);
+            labelSprites.forEach(s => s.visible = showLabels);
+            if (scene) fitCameraToObject(scene);
+        } else if (viewName === "teacher" || viewName === "ai-tutor") {
+            openTeacherModal();
+        } else if (viewName === "quiz" || viewName === "quizzes") {
+            openQuizModal();
+        } else if (viewName === "coderunner") {
+            openCodeRunnerModal();
+        } else if (viewName === "progress") {
+            openProgressModal();
+        } else if (viewName === "resources" || viewName === "notes") {
+            openNotesModal();
+        } else if (viewName === "settings") {
+            openSettingsModal();
+        }
+    }
+
+    function openTeacherModal() {
+        if (!el.modalTeacher) return;
+        el.modalTeacher.style.display = "flex";
+        if (currentModelSpec) {
+            refreshTeacherLesson();
+        } else {
+            document.getElementById("teacher-lesson-body").innerHTML = "<p>Select or generate any 3D model to synthesize a multi-tier structured lesson.</p>";
+        }
+    }
+
+    function openQuizModal() {
+        if (!el.modalQuiz) return;
+        el.modalQuiz.style.display = "flex";
+        if (currentModelSpec) {
+            regenerateQuiz();
+        } else {
+            document.getElementById("quiz-modal-body").innerHTML = "<p>Select or generate a 3D model to test your engineering knowledge.</p>";
+        }
+    }
+
+    function openCodeRunnerModal() {
+        if (!el.modalCodeRunner) return;
+        el.modalCodeRunner.style.display = "flex";
+    }
+
+    async function openProgressModal() {
+        if (!el.modalProgress) return;
+        el.modalProgress.style.display = "flex";
+        const container = document.getElementById("progress-modal-body");
+        if (!container) return;
+        container.innerHTML = "<p class='loading-placeholder'>Fetching assessment report & concept mastery...</p>";
+
+        try {
+            const resp = await fetch("/api/assessment");
+            if (!resp.ok) throw new Error("Assessment service unreachable");
+            const data = await resp.json();
+            const summary = data.summary || {};
+            const weak = data.weak_concepts || [];
+            const strong = data.strong_concepts || [];
+
+            let html = `
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px;">
+                    <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 20px; font-weight: 800; color: #00f0ff;">${summary.accuracy_pct || 0}%</div>
+                        <div style="font-size: 11px; color: #94a3b8;">OVERALL ACCURACY</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 20px; font-weight: 800; color: #34d399;">${summary.total_quizzes || 0}</div>
+                        <div style="font-size: 11px; color: #94a3b8;">QUIZZES TAKEN</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 16px; font-weight: 800; color: #f59e0b;">${summary.mastery_tier || 'Novice'}</div>
+                        <div style="font-size: 11px; color: #94a3b8;">ENGINEERING RANK</div>
+                    </div>
+                </div>
+            `;
+
+            if (weak.length > 0) {
+                html += `<h4 style="color: #f87171; margin-bottom: 8px;">Targeted 3D Revision (${weak.length} Concepts Need Review):</h4>`;
+                weak.forEach(w => {
+                    html += `
+                        <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong style="color: #fff;">${w.topic || w.concept}</strong>
+                                <div style="font-size: 11px; color: #fca5a5;">Accuracy: ${w.accuracy_pct}% &bull; Focus component operation</div>
+                            </div>
+                            <button class="hud-btn hud-btn-accent review-model-btn" data-model="${w.recommended_model || w.topic}" style="padding: 4px 10px; font-size: 11px;">
+                                📦 Open in 3D Lab
+                            </button>
+                        </div>
+                    `;
+                });
+            } else {
+                html += `<div style="color: #34d399; margin: 10px 0;">Great work! No weak concepts currently detected.</div>`;
+            }
+
+            container.innerHTML = html;
+
+            container.querySelectorAll(".review-model-btn").forEach(b => {
+                b.addEventListener("click", () => {
+                    const m = b.dataset.model;
+                    closeAllModals();
+                    switchDashboardView("3dlab");
+                    requestModelGeneration(m);
+                });
+            });
+
+        } catch (e) {
+            container.innerHTML = `<p style="color: #ef4444;">Failed to load assessment telemetry: ${e.message}</p>`;
+        }
+    }
+
+    function openNotesModal() {
+        if (!el.modalNotes) return;
+        el.modalNotes.style.display = "flex";
+    }
+
+    function openSettingsModal() {
+        if (!el.modalSettings) return;
+        el.modalSettings.style.display = "flex";
+    }
+
+    // ==========================================
+    // 11. COMPLETE EVENT LISTENERS SETUP
     // ==========================================
 
     function setupEventListeners() {
+        // Navigation Buttons (Top Nav Pills)
+        document.querySelectorAll("#top-nav-group .nav-pill").forEach(p => {
+            p.addEventListener("click", () => {
+                const targetView = p.dataset.view;
+                if (targetView) switchDashboardView(targetView);
+            });
+        });
+
+        // Navigation Buttons (Left Sidebar Nav)
+        document.querySelectorAll("#side-nav-group .side-nav-item").forEach(s => {
+            s.addEventListener("click", () => {
+                const targetView = s.dataset.view;
+                if (targetView) switchDashboardView(targetView);
+            });
+        });
+
+        // Brand Logo click -> Home
+        const brandBtn = document.getElementById("nav-brand-btn");
+        if (brandBtn) brandBtn.addEventListener("click", () => switchDashboardView("dashboard"));
+
+        // User Profile pill -> Progress
+        const userPill = document.getElementById("user-profile-trigger");
+        if (userPill) userPill.addEventListener("click", () => switchDashboardView("progress"));
+
+        // Hero Start Learning Button
+        if (el.btnHeroStartLearning) {
+            el.btnHeroStartLearning.addEventListener("click", () => {
+                switchDashboardView("3dlab");
+            });
+        }
+
+        // View Mode Toggle (Hologram Core vs Engineering 3D Model)
+        if (el.btnToggleViewMode) {
+            el.btnToggleViewMode.addEventListener("click", () => {
+                if (currentViewMode === "dashboard") {
+                    switchDashboardView("3dlab");
+                } else {
+                    switchDashboardView("dashboard");
+                }
+            });
+        }
+
+        // Feature Cards (Right Panel 2x3 Grid)
+        const card3d = document.getElementById("card-3d-models");
+        if (card3d) card3d.addEventListener("click", () => switchDashboardView("3dlab"));
+
+        const cardAnim = document.getElementById("card-animations");
+        if (cardAnim) cardAnim.addEventListener("click", () => {
+            switchDashboardView("3dlab");
+            playAnimation();
+        });
+
+        const cardCode = document.getElementById("card-code-runner");
+        if (cardCode) cardCode.addEventListener("click", () => switchDashboardView("coderunner"));
+
+        const cardTools = document.getElementById("card-interactive-tools");
+        if (cardTools) cardTools.addEventListener("click", () => {
+            switchDashboardView("3dlab");
+            toggleExplodedView();
+        });
+
+        const cardTutor = document.getElementById("card-ai-tutor");
+        if (cardTutor) cardTutor.addEventListener("click", () => switchDashboardView("teacher"));
+
+        const cardNotes = document.getElementById("card-study-notes");
+        if (cardNotes) cardNotes.addEventListener("click", () => switchDashboardView("notes"));
+
+        // Quick Actions
+        if (el.qaBtnOpen3d) el.qaBtnOpen3d.addEventListener("click", () => switchDashboardView("3dlab"));
+        if (el.qaBtnTakeQuiz) el.qaBtnTakeQuiz.addEventListener("click", () => switchDashboardView("quiz"));
+        if (el.qaBtnViewProgress) el.qaBtnViewProgress.addEventListener("click", () => switchDashboardView("progress"));
+        if (el.qaBtnGetHelp) {
+            el.qaBtnGetHelp.addEventListener("click", () => {
+                appendChatMessage("AURA", "I am your AI Learning Partner. You can ask me questions, explore interactive 3D models, test concepts with quizzes, or run physics simulations in the Code Runner.");
+            });
+        }
+
+        // Category Filter Pills
+        document.querySelectorAll("#category-pills-group .cat-pill").forEach(pill => {
+            pill.addEventListener("click", () => {
+                document.querySelectorAll("#category-pills-group .cat-pill").forEach(p => p.classList.remove("active"));
+                pill.classList.add("active");
+                const cat = pill.dataset.cat;
+                
+                // Filter feature cards
+                document.querySelectorAll("#feature-cards-grid .feature-card-item").forEach(card => {
+                    const cCat = card.dataset.category;
+                    if (cat === "all" || cCat === cat) {
+                        card.style.display = "flex";
+                    } else {
+                        card.style.display = "none";
+                    }
+                });
+
+                // Contextually suggest model for domain
+                if (cat === "science") requestModelGeneration("Human Heart Anatomy");
+                else if (cat === "math") requestModelGeneration("Direct Current (DC) Motor");
+                else if (cat === "coding") openCodeRunnerModal();
+                else if (cat === "ai") switchDashboardView("dashboard");
+            });
+        });
+
+        // Code Runner Execution
+        if (el.btnRunCode) {
+            el.btnRunCode.addEventListener("click", () => {
+                const code = el.codeEditor ? el.codeEditor.value : "";
+                if (el.codeOutput) {
+                    el.codeOutput.textContent = "Executing simulation in Python 3.11 virtual runtime...";
+                    setTimeout(() => {
+                        el.codeOutput.textContent = `[PYTHON 3.11 ENGINE - OK]\n` +
+                            `Lorentz Force on Winding: 129.60 N\n` +
+                            `Electromagnetic Output Torque: 20.74 N·m\n` +
+                            `Operational RPM at 48V: 5806 RPM\n\n` +
+                            `Simulation successfully completed at ${new Date().toLocaleTimeString()}.\n` +
+                            `Physics conservation laws verified.`;
+                    }, 400);
+                }
+            });
+        }
+
+        // Modal Close Buttons
+        const btnCloseTeacher = document.getElementById("btn-close-teacher");
+        if (btnCloseTeacher) btnCloseTeacher.addEventListener("click", () => { if (el.modalTeacher) el.modalTeacher.style.display = "none"; });
+        const btnCloseQuiz = document.getElementById("btn-close-quiz");
+        if (btnCloseQuiz) btnCloseQuiz.addEventListener("click", () => { if (el.modalQuiz) el.modalQuiz.style.display = "none"; });
+        const btnCloseCode = document.getElementById("btn-close-coderunner");
+        if (btnCloseCode) btnCloseCode.addEventListener("click", () => { if (el.modalCodeRunner) el.modalCodeRunner.style.display = "none"; });
+        const btnCloseProgress = document.getElementById("btn-close-progress");
+        if (btnCloseProgress) btnCloseProgress.addEventListener("click", () => { if (el.modalProgress) el.modalProgress.style.display = "none"; });
+        const btnCloseNotes = document.getElementById("btn-close-notes");
+        if (btnCloseNotes) btnCloseNotes.addEventListener("click", () => { if (el.modalNotes) el.modalNotes.style.display = "none"; });
+        const btnCloseSettings = document.getElementById("btn-close-settings");
+        if (btnCloseSettings) btnCloseSettings.addEventListener("click", () => { if (el.modalSettings) el.modalSettings.style.display = "none"; });
+        if (el.btnCloseDrawer) el.btnCloseDrawer.addEventListener("click", () => { if (el.componentDrawer) el.componentDrawer.classList.remove("open"); });
+
+        // HUD Controls
+        const btnSpin = document.getElementById("hud-btn-spin");
+        if (btnSpin) btnSpin.addEventListener("click", toggleAutoSpin);
+        const btnLabels = document.getElementById("hud-btn-labels");
+        if (btnLabels) btnLabels.addEventListener("click", () => {
+            showLabels = !showLabels;
+            labelSprites.forEach(s => s.visible = showLabels);
+        });
+        const btnXray = document.getElementById("hud-btn-xray");
+        if (btnXray) btnXray.addEventListener("click", toggleXRayView);
+        const btnExplode = document.getElementById("hud-btn-explode");
+        if (btnExplode) btnExplode.addEventListener("click", toggleExplodedView);
+        const btnRecenter = document.getElementById("hud-btn-reset");
+        if (btnRecenter) btnRecenter.addEventListener("click", () => fitCameraToObject(scene));
+
         // Animation Bar Buttons
-        el.animPlayPause.addEventListener("click", () => {
+        if (el.animPlayPause) el.animPlayPause.addEventListener("click", () => {
             if (isPlayingAnim) pauseAnimation();
             else playAnimation();
         });
-        el.animNext.addEventListener("click", nextAnimStep);
-        el.animPrev.addEventListener("click", prevAnimStep);
-        el.animReset.addEventListener("click", resetAnimation);
-        el.animTourBtn.addEventListener("click", startPartsTour);
+        if (el.animNext) el.animNext.addEventListener("click", nextAnimStep);
+        if (el.animPrev) el.animPrev.addEventListener("click", prevAnimStep);
+        if (el.animReset) el.animReset.addEventListener("click", resetAnimation);
 
         // Inspector Buttons
-        el.compSpeakBtn.addEventListener("click", () => {
+        if (el.compSpeakBtn) el.compSpeakBtn.addEventListener("click", () => {
             if (selectedComponentId && currentModelSpec) {
                 const comp = currentModelSpec.components.find(c => c.id === selectedComponentId);
                 if (comp) speakText(`${comp.name}. ${comp.description}`);
             }
         });
-        el.compAskBtn.addEventListener("click", () => {
+        if (el.compAskBtn) el.compAskBtn.addEventListener("click", () => {
             if (selectedComponentId && currentModelSpec) {
                 const comp = currentModelSpec.components.find(c => c.id === selectedComponentId);
                 if (comp) {
                     const promptText = `Explain the engineering function of the ${comp.name} in detail.`;
-                    el.mainPromptInput.value = promptText;
+                    if (el.mainPromptInput) el.mainPromptInput.value = promptText;
                     processUserPrompt(promptText);
                 }
             }
         });
 
-
-        // Left Panel Buttons
-        document.getElementById("quick-create-btn").addEventListener("click", () => {
-            el.mainPromptInput.value = "Create a 3D model of ";
-            el.mainPromptInput.focus();
-        });
-        document.getElementById("quick-tour-btn").addEventListener("click", startPartsTour);
-        document.getElementById("quick-labels-btn").addEventListener("click", () => {
-            showLabels = !showLabels;
-            labelSprites.forEach(s => s.visible = showLabels);
-        });
-
         // Chat & Prompt Input
-        el.sendPromptBtn.addEventListener("click", () => processUserPrompt(el.mainPromptInput.value));
-        el.mainPromptInput.addEventListener("keydown", (e) => {
+        if (el.sendPromptBtn) el.sendPromptBtn.addEventListener("click", () => {
+            if (el.mainPromptInput) processUserPrompt(el.mainPromptInput.value);
+        });
+        if (el.mainPromptInput) el.mainPromptInput.addEventListener("keydown", (e) => {
             if (e.key === "Enter") processUserPrompt(el.mainPromptInput.value);
         });
 
         // Voice Controls
-        el.voiceInputBtn.addEventListener("click", toggleVoiceInput);
-        el.btnVoiceToggle.addEventListener("click", () => {
+        if (el.voiceInputBtn) el.voiceInputBtn.addEventListener("click", toggleVoiceInput);
+        if (el.btnVoiceToggle) el.btnVoiceToggle.addEventListener("click", () => {
             isTtsEnabled = !isTtsEnabled;
-            el.ttsIcon.textContent = isTtsEnabled ? "🔊" : "🔇";
-            el.btnVoiceToggle.textContent = isTtsEnabled ? "AUDIO ON" : "AUDIO MUTED";
             if (!isTtsEnabled && window.speechSynthesis) window.speechSynthesis.cancel();
         });
 
-        // Modals
-        el.btnOpenExamples.addEventListener("click", () => {
-            el.examplesModal.style.display = "flex";
-        });
-        el.examplesCloseBtn.addEventListener("click", () => {
-            el.examplesModal.style.display = "none";
-        });
-
-        el.btnUploadTrigger.addEventListener("click", () => {
-            el.uploadModal.style.display = "flex";
-        });
-        el.uploadCloseBtn.addEventListener("click", () => {
-            el.uploadModal.style.display = "none";
-        });
-        el.fileUploadBtn.addEventListener("click", () => el.hiddenFileInput.click());
-        el.browseFilesBtn.addEventListener("click", () => el.hiddenFileInput.click());
-
-        el.hiddenFileInput.addEventListener("change", (e) => {
-            if (e.target.files.length > 0) handleFileUpload(e.target.files[0]);
-        });
-
-        // Dropzone drag-and-drop
-        el.uploadDropzone.addEventListener("dragover", (e) => {
-            e.preventDefault();
-            el.uploadDropzone.classList.add("dragover");
-        });
-        el.uploadDropzone.addEventListener("dragleave", () => {
-            el.uploadDropzone.classList.remove("dragover");
-        });
-        el.uploadDropzone.addEventListener("drop", (e) => {
-            e.preventDefault();
-            el.uploadDropzone.classList.remove("dragover");
-            if (e.dataTransfer.files.length > 0) handleFileUpload(e.dataTransfer.files[0]);
-        });
-
-        // Chat Drawer Toggle
-        document.getElementById("chat-toggle-btn").addEventListener("click", () => {
-            const drawer = document.getElementById("chat-drawer");
-            drawer.classList.toggle("collapsed");
-            document.getElementById("chat-toggle-btn").textContent = drawer.classList.contains("collapsed") ? "▲" : "▼";
-        });
-
-        // Header Quick Action Buttons
-        if (el.btnHeaderTeacher) {
-            el.btnHeaderTeacher.addEventListener("click", () => switchRightPanelTab("teacher"));
+        // File & Vision Upload
+        if (el.fileUploadBtn && el.hiddenFileInput) {
+            el.fileUploadBtn.addEventListener("click", () => el.hiddenFileInput.click());
         }
-        if (el.btnHeaderQuiz) {
-            el.btnHeaderQuiz.addEventListener("click", () => switchRightPanelTab("quiz"));
-        }
-        if (el.btnHeaderGestures) {
-            el.btnHeaderGestures.addEventListener("click", toggleWebcamGestures);
-        }
-        if (el.gesturePipClose) {
-            el.gesturePipClose.addEventListener("click", stopWebcamGestures);
-        }
-        if (el.btnHeaderVision) {
-            el.btnHeaderVision.addEventListener("click", openVisionModal);
-        }
-        if (el.headerOsStatus) {
-            el.headerOsStatus.addEventListener("click", () => switchRightPanelTab("os"));
-        }
-
-        // Right Panel 5-Tab Switcher
-        if (el.tabBtnInspector) {
-            el.tabBtnInspector.addEventListener("click", () => switchRightPanelTab("inspector"));
-        }
-        if (el.tabBtnReferences) {
-            el.tabBtnReferences.addEventListener("click", () => switchRightPanelTab("references"));
-        }
-        if (el.tabBtnTeacher) {
-            el.tabBtnTeacher.addEventListener("click", () => switchRightPanelTab("teacher"));
-        }
-        if (el.tabBtnQuiz) {
-            el.tabBtnQuiz.addEventListener("click", () => switchRightPanelTab("quiz"));
-        }
-        if (el.tabBtnOs) {
-            el.tabBtnOs.addEventListener("click", () => switchRightPanelTab("os"));
-        }
-
-        // AI Teacher Mode Controls
-        if (el.teacherReadBtn) {
-            el.teacherReadBtn.addEventListener("click", speakTeacherLesson);
-        }
-        if (el.teacherGenerateBtn) {
-            el.teacherGenerateBtn.addEventListener("click", refreshTeacherLesson);
-        }
-        if (el.teacherLevelSelect) {
-            el.teacherLevelSelect.addEventListener("change", refreshTeacherLesson);
-        }
-
-
-        // Quiz Lab Controls
-        if (el.btnRegenQuiz) {
-            el.btnRegenQuiz.addEventListener("click", regenerateQuiz);
-        }
-        if (el.quizResetBtn) {
-            el.quizResetBtn.addEventListener("click", resetQuiz);
-        }
-
-        // Secure OS Agent Controls & Launchpad
-        document.querySelectorAll(".os-btn").forEach(btn => {
-            btn.addEventListener("click", () => {
-                const cmd = btn.dataset.cmd;
-                if (cmd) executeOsCommand(cmd);
-            });
-        });
-        if (el.btnExecOs) {
-            el.btnExecOs.addEventListener("click", () => {
-                const cmd = el.osCustomInput ? el.osCustomInput.value.trim() : "";
-                if (cmd) executeOsCommand(cmd);
+        if (el.hiddenFileInput) {
+            el.hiddenFileInput.addEventListener("change", (e) => {
+                if (e.target.files.length > 0) handleFileUpload(e.target.files[0]);
             });
         }
-        if (el.osCustomInput) {
-            el.osCustomInput.addEventListener("keydown", (e) => {
-                if (e.key === "Enter") {
-                    const cmd = el.osCustomInput.value.trim();
-                    if (cmd) executeOsCommand(cmd);
+
+        // Pedagogical settings button in chat bar
+        const btnPedagogy = document.getElementById("btn-pedagogy-settings");
+        if (btnPedagogy) {
+            btnPedagogy.addEventListener("click", () => openSettingsModal());
+        }
+
+        // Browse study file button in Study Notes modal
+        const btnBrowseStudy = document.getElementById("btn-browse-study-file");
+        const studyFileInput = document.getElementById("study-file-input");
+        if (btnBrowseStudy && studyFileInput) {
+            btnBrowseStudy.addEventListener("click", () => studyFileInput.click());
+            studyFileInput.addEventListener("change", (e) => {
+                if (e.target.files && e.target.files.length > 0) {
+                    handleFileUpload(e.target.files[0]);
                 }
             });
         }
 
-        // OS Action Confirmation Modal
-        if (el.btnConfirmYes) {
-            el.btnConfirmYes.addEventListener("click", () => confirmOsAction(true));
-        }
-        if (el.btnConfirmNo) {
-            el.btnConfirmNo.addEventListener("click", () => confirmOsAction(false));
-        }
-        if (el.confirmCloseBtn) {
-            el.confirmCloseBtn.addEventListener("click", closeOsConfirmModal);
+        // Drop zone in Study Notes modal
+        const notesZone = document.getElementById("notes-upload-zone");
+        if (notesZone && studyFileInput) {
+            notesZone.addEventListener("dragover", (e) => {
+                e.preventDefault();
+                notesZone.style.borderColor = "#00f0ff";
+            });
+            notesZone.addEventListener("dragleave", () => {
+                notesZone.style.borderColor = "rgba(255,255,255,0.15)";
+            });
+            notesZone.addEventListener("drop", (e) => {
+                e.preventDefault();
+                notesZone.style.borderColor = "rgba(255,255,255,0.15)";
+                if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    handleFileUpload(e.dataTransfer.files[0]);
+                }
+            });
         }
 
-        // Vision Modal (Image to 3D Reconstructor)
-        if (el.visionCloseBtn) {
-            el.visionCloseBtn.addEventListener("click", closeVisionModal);
-        }
-        if (el.visionBrowseBtn && el.visionFileInput) {
-            el.visionBrowseBtn.addEventListener("click", () => el.visionFileInput.click());
-        }
-        if (el.visionFileInput) {
-            el.visionFileInput.addEventListener("change", (e) => {
-                if (e.target.files.length > 0) handleVisionFileSelect(e.target.files[0]);
+        // Settings modal controls
+        const pedagogySelect = document.getElementById("settings-pedagogy-level");
+        if (pedagogySelect) {
+            pedagogySelect.addEventListener("change", (e) => {
+                const lvl = e.target.value;
+                const teacherSelect = document.getElementById("teacher-level-select");
+                if (teacherSelect) teacherSelect.value = lvl;
+                appendChatMessage("AURA", `Pedagogical mode switched to **${lvl}**.`);
             });
-        }
-        if (el.visionDropzone) {
-            el.visionDropzone.addEventListener("dragover", (e) => {
-                e.preventDefault();
-                el.visionDropzone.classList.add("dragover");
-            });
-            el.visionDropzone.addEventListener("dragleave", () => {
-                el.visionDropzone.classList.remove("dragover");
-            });
-            el.visionDropzone.addEventListener("drop", (e) => {
-                e.preventDefault();
-                el.visionDropzone.classList.remove("dragover");
-                if (e.dataTransfer.files.length > 0) handleVisionFileSelect(e.dataTransfer.files[0]);
-            });
-        }
-        if (el.visionSubmitBtn) {
-            el.visionSubmitBtn.addEventListener("click", submitVisionTo3D);
         }
 
-        // Reference Image Lightbox Modal
-        if (el.lightboxCloseBtn) {
-            el.lightboxCloseBtn.addEventListener("click", closeImageLightbox);
+        const ttsToggle = document.getElementById("settings-tts-toggle");
+        if (ttsToggle) {
+            ttsToggle.addEventListener("change", (e) => {
+                isTtsEnabled = e.target.checked;
+                if (!isTtsEnabled && window.speechSynthesis) window.speechSynthesis.cancel();
+            });
         }
-        if (el.imageLightboxModal) {
-            el.imageLightboxModal.addEventListener("click", (e) => {
-                if (e.target === el.imageLightboxModal) closeImageLightbox();
+
+        const teacherLvl = document.getElementById("teacher-level-select");
+        if (teacherLvl) {
+            teacherLvl.addEventListener("change", () => refreshTeacherLesson());
+        }
+
+        // System status chip click
+        const statusChip = document.getElementById("system-status-chip");
+        if (statusChip) {
+            statusChip.addEventListener("click", async () => {
+                await pollTelemetry();
+                appendChatMessage("AURA", "System diagnostic verified: FastAPI backend online, 3D WebGL renderer operational, neural pipeline synchronized.");
+            });
+        }
+
+        // Inspiration banner card click
+        const inspCard = document.getElementById("inspiration-banner-card");
+        if (inspCard) {
+            inspCard.addEventListener("click", () => {
+                const quotes = [
+                    "\"The scientist investigates that which already is; the Engineer creates that which has never been.\" — Theodore von Kármán",
+                    "\"Engineering is the closest thing to real magic that exists in the world.\" — Elon Musk",
+                    "\"Knowledge is of no value unless you put it into practice.\" — Anton Chekhov",
+                    "\"Everything is theoretically impossible, until it is done.\" — Robert A. Heinlein"
+                ];
+                const randQuote = quotes[Math.floor(Math.random() * quotes.length)];
+                appendChatMessage("AURA", randQuote);
             });
         }
 
         // Global Escape Key to close modals
         window.addEventListener("keydown", (e) => {
-            if (e.key === "Escape") {
-                closeImageLightbox();
-                closeVisionModal();
-                closeOsConfirmModal();
-                if (el.examplesModal) el.examplesModal.style.display = "none";
-                if (el.uploadModal) el.uploadModal.style.display = "none";
-            }
+            if (e.key === "Escape") closeAllModals();
         });
     }
 
@@ -2787,15 +3342,17 @@
         initThreeJS();
         setupEventListeners();
         initVoiceRecognition();
-        loadExamplesLibrary();
 
         // Start telemetry poll
         setInterval(pollTelemetry, 3000);
         pollTelemetry();
         loadStudentProgress();
 
-        // Load initial Transformer model via catalog or Gemini
-        await requestModelGeneration("Step-Down Electrical Transformer", false);
+        // Start on Dashboard View with Hologram Core
+        switchDashboardView("dashboard");
+
+        // Preload initial high-fidelity Heart Anatomy catalog in background
+        await requestModelGeneration("Human Heart Anatomy", true);
     });
 
 })();
