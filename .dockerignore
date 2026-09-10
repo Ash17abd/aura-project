@@ -1,0 +1,31 @@
+# Environment & Secrets
+.env
+.env.*
+config/api_keys.json
+.streamlit/secrets.toml
+*.pem
+*.key
+
+# Python & Build
+.venv/
+env/
+venv/
+__pycache__/
+*.py[cod]
+.mypy_cache/
+build/
+dist/
+
+# Git & IDE
+.git
+.gitignore
+.vscode/
+.idea/
+
+# Scratch & Logs
+scratch/
+*.log
+tunnel.log
+tunnel_url.txt
+cloudflared*
+mingit/

@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURA 3D Learning Lab — AI Interactive Engineering & Science</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <!-- Google Fonts for futuristic tech look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Three.js and OrbitControls via CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+    <!-- Main Shell -->
+    <div class="aura-shell">
+        
+        <!-- Top Bar -->
+        <header class="aura-header">
+            <div class="brand-group">
+                <div class="reactor-mini" id="header-reactor"></div>
+                <div class="brand-titles">
+                    <span class="brand-title">AURA</span>
+                    <span class="brand-subtitle">3D LEARNING LAB</span>
+                </div>
+                <div class="status-chip" id="system-status-chip">
+                    <span class="pulse-dot"></span>
+                    <span id="status-chip-text">ONLINE // GEMINI 3.5</span>
+                </div>
+                <div class="pipeline-chip" id="pipeline-status-chip" title="Agentic Pipeline Status">
+                    <span class="pipeline-dot"></span>
+                    <span id="pipeline-status-text">PIPELINE: IDLE // READY</span>
+                </div>
+            </div>
+
+            <div class="active-topic-banner">
+                <span class="topic-tag">ACTIVE 3D SYSTEM:</span>
+                <span class="topic-name" id="current-topic-name">Step-Down Electrical Transformer</span>
+            </div>
+
+            <div class="header-actions">
+                <button class="hud-btn" id="btn-header-teacher" title="Open AI Teacher Mode Lesson">
+                    <span class="icon">🎓</span> TEACHER MODE
+                </button>
+                <button class="hud-btn" id="btn-header-quiz" title="Open Interactive 3D Quiz Lab">
+                    <span class="icon">🧪</span> QUIZ LAB
+                </button>
+                <button class="hud-btn" id="btn-header-gestures" title="Control 3D Model with Webcam Hand Gestures">
+                    <span class="icon">✋</span> GESTURES
+                </button>
+                <button class="hud-btn" id="btn-header-vision" title="Upload Reference Diagram or Blueprint to 3D">
+                    <span class="icon">📷</span> IMAGE TO 3D
+                </button>
+                <button class="hud-btn hud-btn-os" id="header-os-status" title="Local OS Security & Automation">
+                    <span class="icon">🛡️</span> OS AGENT
+                </button>
+                <button class="hud-btn" id="btn-open-examples" title="Browse 3D Model Catalog & Examples">
+                    <span class="icon">◈</span> EXAMPLES
+                </button>
+                <button class="hud-btn" id="btn-upload-trigger" title="Upload PDF/DOCX/PPTX Study Material">
+                    <span class="icon">⇪</span> UPLOAD STUDY
+                </button>
+                <button class="hud-btn" id="btn-voice-toggle" title="Toggle Voice Response (TTS)">
+                    <span class="icon" id="tts-icon">🔊</span> AUDIO ON
+                </button>
+                <button class="hud-btn hud-btn-accent" id="btn-reset-view" title="Recenter 3D View">
+                    <span class="icon">↺</span> RESET VIEW
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Body Grid -->
+        <div class="aura-body">
+            
+            <!-- Left Panel: Navigation & Telemetry -->
+            <aside class="left-panel">
+                <div class="reactor-card">
+                    <div class="arc-reactor-core" id="arc-reactor">
+                        <div class="reactor-ring outer"></div>
+                        <div class="reactor-ring middle"></div>
+                        <div class="reactor-ring inner"></div>
+                        <div class="reactor-center"></div>
+                    </div>
+                    <div class="reactor-label">CORE TELEMETRY</div>
+                </div>
+
+                <div class="panel-section">
+                    <div class="section-title">QUICK ACTIONS</div>
+                    <div class="action-buttons-list">
+                        <button class="panel-btn" id="quick-create-btn">
+                            <span class="btn-icon">⚡</span> Create New Model
+                        </button>
+                        <button class="panel-btn" id="quick-tour-btn">
+                            <span class="btn-icon">👁</span> Auto Parts Tour
+                        </button>
+                        <button class="panel-btn" id="quick-labels-btn">
+                            <span class="btn-icon">🏷</span> Toggle 3D Labels
+                        </button>
+                    </div>
+                </div>
+
+                <div class="panel-section telemetry-section">
+                    <div class="section-title">SYSTEM GAUGES</div>
+                    <div class="gauge-item">
+                        <div class="gauge-label">
+                            <span>CPU LOAD</span>
+                            <span id="telemetry-cpu">14%</span>
+                        </div>
+                        <div class="gauge-bar"><div class="gauge-fill" id="telemetry-cpu-bar" style="width: 14%;"></div></div>
+                    </div>
+                    <div class="gauge-item">
+                        <div class="gauge-label">
+                            <span>RAM ALLOC</span>
+                            <span id="telemetry-ram">42%</span>
+                        </div>
+                        <div class="gauge-bar"><div class="gauge-fill" id="telemetry-ram-bar" style="width: 42%;"></div></div>
+                    </div>
+                    <div class="gauge-item">
+                        <div class="gauge-label">
+                            <span>RENDER RATE</span>
+                            <span id="telemetry-fps">60 FPS</span>
+                        </div>
+                        <div class="gauge-bar"><div class="gauge-fill fps-fill" style="width: 100%;"></div></div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Center Panel: 3D Viewport & Animation Player -->
+            <main class="center-panel">
+                <!-- 3D Canvas Viewport -->
+                <div class="viewport-wrapper" id="viewport-wrapper">
+                    <div id="threejs-container"></div>
+
+                    <!-- Viewport Overlay Controls -->
+                    <div class="viewport-controls">
+                        <button class="v-btn" id="v-zoom-in" title="Zoom In">+</button>
+                        <button class="v-btn" id="v-zoom-out" title="Zoom Out">−</button>
+                        <button class="v-btn" id="v-rotate" title="Rotate 45°">↻</button>
+                        <button class="v-btn" id="v-auto-spin" title="Toggle Auto Spin">⟳</button>
+                        <button class="v-btn" id="v-recenter" title="Recenter View">⊙</button>
+                    </div>
+
+                    <!-- Hovered part badge -->
+                    <div class="hover-badge" id="hover-badge">Component</div>
+
+                    <!-- Multi-stage Generation Loading Indicator -->
+                    <div class="generation-overlay" id="generation-overlay">
+                        <div class="spinner-core"></div>
+                        <div class="stage-title" id="stage-title">UNDERSTANDING REQUEST</div>
+                        <div class="stage-subtitle" id="stage-subtitle">Analyzing system physics & spatial architecture...</div>
+                        <div class="pipeline-progress">
+                            <div class="pipeline-step active" id="step-1">1. INTENT</div>
+                            <div class="pipeline-step" id="step-2">2. COMPONENTS</div>
+                            <div class="pipeline-step" id="step-3">3. GEOMETRY</div>
+                            <div class="pipeline-step" id="step-4">4. VALIDATION</div>
+                            <div class="pipeline-step" id="step-5">5. 3D RENDER</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Floating Webcam Hand Gesture HUD PIP -->
+                <div class="gesture-pip-card" id="gesture-pip" style="display: none;">
+                    <div class="gesture-pip-header">
+                        <span class="gesture-pip-title">✋ HAND GESTURE TRACKER</span>
+                        <button class="gesture-pip-close" id="gesture-pip-close" title="Stop Gesture Control">✕</button>
+                    </div>
+                    <div class="gesture-pip-viewport">
+                        <video id="gesture-video" playsinline muted autoplay style="display:none;"></video>
+                        <canvas id="gesture-canvas" width="260" height="195"></canvas>
+                        <div class="gesture-pip-badge" id="gesture-status-badge">INITIALIZING CAMERA...</div>
+                    </div>
+                    <div class="gesture-hints">
+                        <div class="hint-row"><span>✋ <strong>Move Hand:</strong> Rotate 3D Model</span></div>
+                        <div class="hint-row"><span>🤏 <strong>Pinch:</strong> Zoom In / Out</span></div>
+                        <div class="hint-row"><span>✊ <strong>Fist:</strong> Reset 3D View</span></div>
+                    </div>
+                </div>
+
+                <!-- Animation Controls Bar -->
+                <div class="animation-bar">
+                    <div class="anim-main-controls">
+                        <button class="anim-btn" id="anim-prev" title="Previous Phase">⏮</button>
+                        <button class="anim-btn anim-btn-primary" id="anim-play-pause" title="Play Animation">▶ PLAY</button>
+                        <button class="anim-btn" id="anim-next" title="Next Phase">⏭</button>
+                        <button class="anim-btn" id="anim-reset" title="Restart Animation">↺</button>
+                    </div>
+
+                    <div class="anim-progress-track">
+                        <div class="anim-info-row">
+                            <span class="anim-step-badge" id="anim-step-badge">STEP 1 OF 3</span>
+                            <span class="anim-step-desc" id="anim-step-desc">Loading operational sequence...</span>
+                        </div>
+                        <div class="anim-bar-track">
+                            <div class="anim-bar-fill" id="anim-bar-fill" style="width: 33%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="anim-extra-controls">
+                        <button class="hud-btn" id="anim-tour-btn">PARTS TOUR</button>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Right Panel: Component Inspector & Study Topics -->
+            <aside class="right-panel">
+                <!-- Tab Switcher -->
+                <div class="right-panel-tabs">
+                    <button class="r-tab active" id="tab-btn-inspector">PARTS</button>
+                    <button class="r-tab" id="tab-btn-references">SCHEMATICS (<span id="ref-tab-count">0</span>)</button>
+                    <button class="r-tab" id="tab-btn-teacher">AI TEACHER</button>
+                    <button class="r-tab" id="tab-btn-quiz">QUIZ LAB</button>
+                    <button class="r-tab" id="tab-btn-os">AGENT & OS</button>
+                </div>
+
+                <!-- View 1: Inspector & Parts -->
+                <div class="tab-view active" id="view-inspector">
+                    <!-- Component Inspector Card -->
+                    <div class="panel-section inspector-section">
+                        <div class="section-title">
+                            <span>COMPONENT INSPECTOR</span>
+                            <span class="sub-badge" id="component-count-badge">8 PARTS</span>
+                        </div>
+
+                        <div class="inspector-card" id="inspector-card">
+                            <div class="comp-header">
+                                <div class="comp-color-chip" id="comp-color-chip"></div>
+                                <div class="comp-title-group">
+                                    <h3 class="comp-name" id="comp-name">Select a 3D Component</h3>
+                                    <div class="comp-meta-tags">
+                                        <span class="tag" id="comp-role-tag">Role: Active</span>
+                                        <span class="tag" id="comp-type-tag">Type: Cylinder</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="comp-body">
+                                <div class="comp-desc-box" id="comp-desc">
+                                    Click on any 3D component in the viewport or use voice commands to inspect its engineering specifications and scientific role.
+                                </div>
+
+                                <div class="comp-actions">
+                                    <button class="hud-btn hud-btn-accent" id="comp-speak-btn">
+                                        <span>🔊</span> Read Aloud
+                                    </button>
+                                    <button class="hud-btn" id="comp-ask-btn">
+                                        <span>💬</span> Ask AURA
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Component List Selector -->
+                    <div class="panel-section components-list-section">
+                        <div class="section-title">PARTS EXPLORER</div>
+                        <div class="components-scroll-list" id="components-scroll-list">
+                            <!-- Populated via JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Topics & Reading Context (from uploaded files) -->
+                    <div class="panel-section topics-section" id="topics-section" style="display: none;">
+                        <div class="section-title">STUDY TOPICS DETECTED</div>
+                        <div class="topics-list" id="topics-list">
+                            <!-- Populated when reading material is uploaded -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View 2: Real-World Reference Images -->
+                <div class="tab-view" id="view-references" style="display: none;">
+                    <div class="panel-section">
+                        <div class="section-title">
+                            <span>REAL-WORLD SCHEMATICS</span>
+                            <span class="sub-badge" id="ref-status-badge">ONLINE</span>
+                        </div>
+                        <p class="ref-intro">Web schematics, diagrams, and illustrations for visual comparison with your 3D model.</p>
+                        <div class="reference-gallery-grid" id="reference-gallery-grid">
+                            <div class="ref-empty-state">Generate a model to see real-world reference diagrams.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View 3: AI Teacher Mode -->
+                <div class="tab-view" id="view-teacher" style="display: none;">
+                    <div class="panel-section teacher-hero-section">
+                        <div class="section-title">
+                            <span>AI TEACHER MODE</span>
+                            <span class="sub-badge" id="teacher-status-badge">SOCRATIC</span>
+                        </div>
+                        <div class="teacher-topic-header">
+                            <h2 class="teacher-topic-title" id="teacher-topic-title">Step-Down Electrical Transformer</h2>
+                            <div class="teacher-actions-bar">
+                                <select id="teacher-level-select" class="hud-select" style="background: rgba(15, 23, 42, 0.85); color: #00d4ff; border: 1px solid #334155; border-radius: 4px; padding: 4px 8px; font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 11px;">
+                                    <option value="Beginner">Beginner (Analogies)</option>
+                                    <option value="Intermediate" selected>Intermediate (Technical)</option>
+                                    <option value="Advanced">Advanced (Equations)</option>
+                                    <option value="Socratic">Socratic (Inquiry)</option>
+                                </select>
+                                <button class="hud-btn hud-btn-accent" id="teacher-read-btn"><span>🔊</span> Read</button>
+                                <button class="hud-btn" id="teacher-generate-btn"><span>↺</span> Refresh</button>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Lesson Overview -->
+                    <div class="panel-section">
+                        <div class="section-title">SYSTEM OVERVIEW</div>
+                        <div class="teacher-card" id="teacher-overview-box">
+                            Generate a 3D model to load the comprehensive pedagogical lesson.
+                        </div>
+                    </div>
+
+                    <!-- Working Principle -->
+                    <div class="panel-section">
+                        <div class="section-title">OPERATING PRINCIPLES & GOVERNING LAWS</div>
+                        <div class="teacher-card physics-card" id="teacher-principle-box">
+                            Detailed physics and energy conservation mechanisms will appear here.
+                        </div>
+                    </div>
+
+                    <!-- Component Anatomy Breakdown -->
+                    <div class="panel-section">
+                        <div class="section-title">ANATOMICAL BREAKDOWN</div>
+                        <div class="teacher-breakdown-list" id="teacher-components-list">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Animation & Dynamic Flow Walkthrough -->
+                    <div class="panel-section">
+                        <div class="section-title">DYNAMIC FLOW WALKTHROUGH</div>
+                        <div class="teacher-card" id="teacher-animation-box">
+                            Operational sequence insights.
+                        </div>
+                    </div>
+
+                    <!-- Real-World Applications -->
+                    <div class="panel-section">
+                        <div class="section-title">REAL-WORLD APPLICATIONS</div>
+                        <div class="teacher-apps-list" id="teacher-apps-list">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Socratic Follow-Up Questions -->
+                    <div class="panel-section">
+                        <div class="section-title">SOCRATIC CHALLENGE QUESTIONS</div>
+                        <div class="socratic-list" id="teacher-socratic-list">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View 4: Interactive Quiz Lab -->
+                <div class="tab-view" id="view-quiz" style="display: none;">
+                    <div class="panel-section quiz-header-section">
+                        <div class="section-title">
+                            <span>INTERACTIVE QUIZ LAB</span>
+                            <span class="sub-badge" id="quiz-level-badge">INTERMEDIATE</span>
+                        </div>
+                        <div class="quiz-controls-row">
+                            <select class="hud-select" id="quiz-difficulty-select">
+                                <option value="Beginner">Beginner</option>
+                                <option value="Intermediate" selected>Intermediate</option>
+                                <option value="Advanced">Advanced</option>
+                            </select>
+                            <button class="hud-btn hud-btn-accent" id="btn-regen-quiz">GENERATE QUIZ</button>
+                        </div>
+                    </div>
+
+                    <!-- Student Learning Process & Mastery Tracker -->
+                    <div class="panel-section student-tracker-section">
+                        <div class="student-tracker-card">
+                            <div class="tracker-header">
+                                <span class="tracker-title">STUDENT LEARNING PROCESS</span>
+                                <span class="mastery-rank-badge" id="student-rank-badge">NOVICE</span>
+                            </div>
+                            <div class="tracker-metrics-grid">
+                                <div class="metric-item">
+                                    <span class="metric-label">ACCURACY</span>
+                                    <span class="metric-val" id="student-accuracy-val">0.0%</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">STREAK</span>
+                                    <span class="metric-val" id="student-streak-val">🔥 0</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">QUIZZES</span>
+                                    <span class="metric-val" id="student-quizzes-val">0</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">ATTEMPTS</span>
+                                    <span class="metric-val" id="student-questions-val">0</span>
+                                </div>
+                            </div>
+                            <div class="tracker-topics-row" id="student-topics-row" style="display: none;">
+                                <span class="topics-label">Mastered Topics:</span>
+                                <div class="topics-tags-list" id="student-mastered-tags"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Score Card -->
+                    <div class="panel-section quiz-score-section">
+                        <div class="quiz-score-card">
+                            <div class="quiz-score-header">
+                                <span>ACTIVE QUIZ SCORE</span>
+                                <span class="score-ratio" id="quiz-score-ratio">0 / 0</span>
+                            </div>
+                            <div class="quiz-score-bar">
+                                <div class="quiz-score-fill" id="quiz-score-fill" style="width: 0%;"></div>
+                            </div>
+                            <div class="quiz-feedback-text" id="quiz-feedback-text">
+                                Answer the questions below to test your 3D spatial and physical understanding.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Questions List Container -->
+                    <div class="panel-section questions-container-section">
+                        <div class="questions-list" id="quiz-questions-list">
+                            <!-- Rendered dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="panel-section quiz-footer-section">
+                        <button class="hud-btn" id="quiz-reset-btn" style="width: 100%;">↺ RETAKE THIS QUIZ</button>
+                    </div>
+                </div>
+
+                <!-- View 5: Secure Local OS Agent -->
+                <div class="tab-view" id="view-os" style="display: none;">
+                    <div class="panel-section os-header-section">
+                        <div class="section-title">
+                            <span>SECURE LOCAL OS AGENT</span>
+                            <span class="sub-badge badge-secure" id="os-security-badge">WHITELIST ONLY</span>
+                        </div>
+                        <div class="security-banner">
+                            <span class="shield-icon">🛡️</span>
+                            <span class="security-text">
+                                Parameterized whitelist security active. Zero arbitrary shell commands or code execution permitted. All sensitive actions require explicit authorization.
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Quick OS Action Launchpad -->
+                    <div class="panel-section">
+                        <div class="section-title">LOCAL APPLICATION LAUNCHPAD</div>
+                        <div class="os-quick-grid">
+                            <button class="os-btn" data-cmd="open chrome">
+                                <span class="os-icon">🌐</span> Google Chrome
+                            </button>
+                            <button class="os-btn" data-cmd="open vs code">
+                                <span class="os-icon">💻</span> VS Code
+                            </button>
+                            <button class="os-btn" data-cmd="open explorer">
+                                <span class="os-icon">📁</span> File Explorer
+                            </button>
+                            <button class="os-btn" data-cmd="open terminal">
+                                <span class="os-icon">⚡</span> Terminal
+                            </button>
+                            <button class="os-btn" data-cmd="open calculator">
+                                <span class="os-icon">🔢</span> Calculator
+                            </button>
+                            <button class="os-btn" data-cmd="open downloads">
+                                <span class="os-icon">📥</span> Downloads
+                            </button>
+                            <button class="os-btn" data-cmd="open project folder">
+                                <span class="os-icon">📂</span> Project Folder
+                            </button>
+                            <button class="os-btn" data-cmd="take screenshot">
+                                <span class="os-icon">📸</span> Screenshot
+                            </button>
+                            <button class="os-btn" data-cmd="mute volume">
+                                <span class="os-icon">🔇</span> Mute Audio
+                            </button>
+                            <button class="os-btn" data-cmd="list processes">
+                                <span class="os-icon">📊</span> List Tasks
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Custom Safe OS Command Input -->
+                    <div class="panel-section">
+                        <div class="section-title">NATURAL OS INSTRUCTION</div>
+                        <div class="os-input-row">
+                            <input type="text" class="os-command-input" id="os-custom-input" placeholder="e.g., 'Open Chrome', 'Open downloads folder', 'Volume up'...">
+                            <button class="hud-btn hud-btn-accent" id="btn-exec-os">EXECUTE</button>
+                        </div>
+                        <div class="os-result-box" id="os-result-box">Ready for verified local action.</div>
+                    </div>
+
+                    <!-- Process Telemetry Box -->
+                    <div class="panel-section" id="process-telemetry-section" style="display: none;">
+                        <div class="section-title">SAFE PROCESS TELEMETRY</div>
+                        <div class="process-table-wrapper" id="process-table-wrapper">
+                            <!-- Rendered dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Immutable Audit Log -->
+                    <div class="panel-section">
+                        <div class="section-title">
+                            <span>SECURITY AUDIT LOG</span>
+                            <span class="sub-badge" id="audit-count-badge">0 LOGS</span>
+                        </div>
+                        <div class="audit-log-container" id="audit-log-container">
+                            <div class="audit-empty">No OS actions recorded in this session.</div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Bottom Bar: AURA Chat & Prompt Input -->
+        <footer class="aura-footer">
+            <div class="chat-drawer" id="chat-drawer">
+                <div class="chat-header">
+                    <span class="chat-title">AURA CONTEXTUAL ASSISTANT // CHAT LOG</span>
+                    <button class="chat-collapse-btn" id="chat-toggle-btn">▼</button>
+                </div>
+                <div class="chat-messages" id="chat-messages">
+                    <div class="message assistant">
+                        <div class="sender">AURA // SYSTEM</div>
+                        <div class="text">Welcome to the AURA 3D Learning Lab. Enter any natural language prompt, request a 3D model, or upload study material to begin dynamic spatial learning.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Bar -->
+            <div class="input-bar">
+                <button class="input-action-btn" id="voice-input-btn" title="Speak to AURA (Web Speech Recognition)">
+                    <span class="mic-icon" id="mic-icon">🎤</span>
+                </button>
+                <button class="input-action-btn" id="file-upload-btn" title="Upload Study Reading (PDF, DOCX, PPTX, TXT)">
+                    <span>📁</span>
+                </button>
+                <input type="file" id="hidden-file-input" style="display: none;" accept=".pdf,.docx,.pptx,.txt,.md,.csv,.json">
+                
+                <input type="text" class="main-prompt-input" id="main-prompt-input" 
+                       placeholder="Ask AURA to build, explain, or animate (e.g. 'Create a 3D model of a turbofan engine', 'Rotate view', 'How does the coil work?')...">
+                
+                <button class="send-btn" id="send-prompt-btn">
+                    <span>TRANSMIT</span> ➔
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Modal: Example Prompts Explorer -->
+    <div class="modal-backdrop" id="examples-modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2 class="modal-title">◈ 3D MODEL & PROMPTS EXPLORER</h2>
+                <button class="modal-close-btn" id="examples-close-btn">✕</button>
+            </div>
+            <div class="modal-search-row">
+                <input type="text" class="modal-search-input" id="examples-search-input" placeholder="Search models (e.g. engine, motor, transformer, heart, cell, rocket)...">
+                <div class="category-tabs" id="category-tabs">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+            <div class="modal-cards-grid" id="examples-cards-grid">
+                <!-- Cards populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Study Material Upload -->
+    <div class="modal-backdrop" id="upload-modal">
+        <div class="modal-box upload-modal-box">
+            <div class="modal-header">
+                <h2 class="modal-title">⇪ UPLOAD STUDY MATERIAL</h2>
+                <button class="modal-close-btn" id="upload-close-btn">✕</button>
+            </div>
+            <div class="upload-dropzone" id="upload-dropzone">
+                <div class="drop-icon">📄</div>
+                <div class="drop-text">Drag & drop your textbook, paper, or lecture slides here</div>
+                <div class="drop-sub">Supported formats: PDF, DOCX, PPTX, TXT, Markdown, CSV (Max 25MB)</div>
+                <button class="hud-btn hud-btn-accent" id="browse-files-btn">BROWSE FILES</button>
+            </div>
+            <div class="upload-status" id="upload-status" style="display: none;">
+                <div class="spinner-mini"></div>
+                <span id="upload-status-text">Processing document and extracting topics...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Reference Image Comparison Lightbox -->
+    <div class="modal-backdrop" id="image-lightbox-modal">
+        <div class="modal-box lightbox-modal-box">
+            <div class="modal-header">
+                <div class="lightbox-modal-title-group">
+                    <h2 class="modal-title" id="lightbox-title">◈ REAL-WORLD REFERENCE COMPARISON</h2>
+                    <span class="sub-badge" id="lightbox-source-badge">SCHEMATIC REFERENCE</span>
+                </div>
+                <button class="modal-close-btn" id="lightbox-close-btn">✕</button>
+            </div>
+            <div class="lightbox-body">
+                <div class="lightbox-img-wrapper">
+                    <img id="lightbox-img" src="" alt="Real-world reference schematic" loading="lazy">
+                </div>
+                <div class="lightbox-info-pane">
+                    <h3 class="lightbox-img-title" id="lightbox-caption">Technical Diagram</h3>
+                    <p class="lightbox-comparison-hint">
+                        <strong>Visual Comparison Guide:</strong> Compare this reference with the interactive 3D model in the viewport. Inspect physical geometry, relative proportions, connected conduits, and component positioning to verify real-world accuracy.
+                    </p>
+                    <div class="lightbox-meta-row">
+                        <span class="tag" id="lightbox-dim-tag">Format: Web Diagram</span>
+                        <a href="#" target="_blank" rel="noopener noreferrer" class="hud-btn hud-btn-accent lightbox-open-link" id="lightbox-source-link">
+                            OPEN SOURCE PAGE ↗
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Visual Understanding (Image to 3D) -->
+    <div class="modal-backdrop" id="vision-modal">
+        <div class="modal-box vision-modal-box">
+            <div class="modal-header">
+                <div class="lightbox-modal-title-group">
+                    <h2 class="modal-title">📷 VISUAL UNDERSTANDING // IMAGE TO 3D</h2>
+                    <span class="sub-badge">GEMINI VISION</span>
+                </div>
+                <button class="modal-close-btn" id="vision-close-btn">✕</button>
+            </div>
+            <div class="vision-modal-body">
+                <div class="upload-dropzone" id="vision-dropzone">
+                    <div class="drop-icon">🖼️</div>
+                    <div class="drop-text">Drag & drop technical schematic, patent drawing, blueprint, or photo</div>
+                    <div class="drop-sub">Supported formats: JPG, PNG, WEBP, GIF (Max 15MB)</div>
+                    <button class="hud-btn hud-btn-accent" id="vision-browse-btn">BROWSE IMAGE</button>
+                    <input type="file" id="vision-file-input" accept="image/*" style="display: none;">
+                </div>
+                <div class="vision-preview-box" id="vision-preview-box" style="display: none;">
+                    <img id="vision-preview-img" src="" alt="Selected schematic">
+                    <div class="vision-prompt-row">
+                        <input type="text" class="modal-search-input" id="vision-prompt-input" placeholder="Optional hint (e.g., 'Focus on internal valve conduits')...">
+                        <button class="hud-btn hud-btn-accent" id="vision-submit-btn">RECONSTRUCT 3D</button>
+                    </div>
+                </div>
+                <div class="upload-status" id="vision-status" style="display: none;">
+                    <div class="spinner-mini"></div>
+                    <span id="vision-status-text">Analyzing image features with Gemini Vision and synthesizing 3D geometry...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Sensitive OS Action Confirmation -->
+    <div class="modal-backdrop" id="os-confirm-modal">
+        <div class="modal-box confirm-modal-box">
+            <div class="modal-header">
+                <h2 class="modal-title" style="color: var(--accent-red);">⚠️ CONFIRMATION REQUIRED</h2>
+                <button class="modal-close-btn" id="confirm-close-btn">✕</button>
+            </div>
+            <div class="confirm-body">
+                <p id="confirm-modal-text">A sensitive operating system action has been requested.</p>
+                <div class="confirm-details-box" id="confirm-details-box">Command details...</div>
+                <div class="confirm-actions-row">
+                    <button class="hud-btn hud-btn-danger" id="btn-confirm-yes">PROCEED & EXECUTE</button>
+                    <button class="hud-btn" id="btn-confirm-no">CANCEL ACTION</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MediaPipe Hands & Camera Utils for Real-Time Webcam Hand Gesture 3D Control -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <!-- App Logic Script -->
+    <script src="/static/app.js"></script>
+</body>
+</html>

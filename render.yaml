@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: aura-3d-learning-lab
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: oregon
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: "*"
+      - key: AURA_CLOUD_DEPLOYED
+        value: "1"
+      - key: AURA_DISABLE_LOCAL_OS
+        value: "1"

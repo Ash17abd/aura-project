@@ -1,0 +1,171 @@
+{
+  "student_id": "default_student",
+  "student_name": "Student",
+  "total_quizzes": 2,
+  "total_questions": 11,
+  "correct_answers": 8,
+  "accuracy_pct": 72.7,
+  "streak": 1,
+  "best_streak": 4,
+  "mastery_tier": "Apprentice",
+  "topics": {
+    "Step-Down Electrical Transformer": {
+      "attempts": 9,
+      "correct": 7,
+      "accuracy_pct": 77.8,
+      "status": "In Progress",
+      "last_tested": "2026-09-10T05:17:22.478488+00:00"
+    },
+    "Automotive Vehicle Chassis and Drivetrain": {
+      "attempts": 2,
+      "correct": 1,
+      "accuracy_pct": 50.0,
+      "status": "Needs Review",
+      "last_tested": "2026-09-10T07:45:18.470496+00:00"
+    }
+  },
+  "history": [
+    {
+      "timestamp": "2026-09-09T16:31:43.367948",
+      "type": "single_answer",
+      "topic": "Step-Down Electrical Transformer",
+      "question_id": "q1",
+      "question_text": "In the 3D model of Step-Down Electrical Transformer, which component is described as: \"High-voltage AC input winding\"?",
+      "student_choice": "Primary Coil",
+      "correct_index": 0,
+      "is_correct": true,
+      "difficulty": "Intermediate"
+    },
+    {
+      "timestamp": "2026-09-09T16:31:43.383237",
+      "type": "single_answer",
+      "topic": "Step-Down Electrical Transformer",
+      "question_id": "q2",
+      "question_text": "What is the primary function or energy conversion performed by the Step-Down Electrical Transformer?",
+      "student_choice": "Incorrect Choice",
+      "correct_index": 0,
+      "is_correct": false,
+      "difficulty": "Intermediate"
+    },
+    {
+      "timestamp": "2026-09-09T16:31:43.390002",
+      "type": "single_answer",
+      "topic": "Step-Down Electrical Transformer",
+      "question_id": "q3",
+      "question_text": "True or False: The Secondary Coil operates independently without any physical or energetic connection to Primary Coil.",
+      "student_choice": "False",
+      "correct_index": 1,
+      "is_correct": true,
+      "difficulty": "Intermediate"
+    },
+    {
+      "timestamp": "2026-09-09T16:31:43.395718",
+      "type": "single_answer",
+      "topic": "Step-Down Electrical Transformer",
+      "question_id": "q4",
+      "question_text": "If mechanical or electrical load on Primary Coil increases significantly, what engineering effect is observed?",
+      "student_choice": "Increased internal stress, temperature, or electromagnetic flux across the assembly",
+      "correct_index": 0,
+      "is_correct": true,
+      "difficulty": "Intermediate"
+    },
+    {
+      "timestamp": "2026-09-09T16:31:43.401182",
+      "type": "completed_quiz",
+      "topic": "Step-Down Electrical Transformer",
+      "difficulty": "Intermediate",
+      "score": 3,
+      "total_questions": 4,
+      "score_pct": 75.0,
+      "details": []
+    },
+    {
+      "timestamp": "2026-09-09T17:14:35.283818+00:00",
+      "type": "single_answer",
+      "topic": "Step-Down Electrical Transformer",
+      "question_id": "q1",
+      "question_text": "In the 3D model of Step-Down Electrical Transformer, which component is described as: \"Sturdy structural steel base plat",
+      "student_choice": "Mounting Chassis & Enclosure",
+      "correct_index": 0,
+      "is_correct": true,
+      "difficulty": "Intermediate"
+    },
+    {
+      "timestamp": "2026-09-09T17:14:42.938853+00:00",
+      "type": "single_answer",
+      "topic": "Step-Down Electrical Transformer",
+      "question_id": "q2",
+      "question_text": "What is the primary function or energy conversion performed by the Step-Down Electrical Transformer?",
+      "student_choice": "Controlled physical operation transforming input energy through Mounting Chassis & Enclosure",
+      "correct_index": 0,
+      "is_correct": true,
+      "difficulty": "Intermediate"
+    },
+    {
+      "timestamp": "2026-09-09T17:14:50.059045+00:00",
+      "type": "single_answer",
+      "topic": "Step-Down Electrical Transformer",
+      "question_id": "q3",
+      "question_text": "True or False: The Silicon Steel Laminated Core operates independently without any physical or energetic connection to M",
+      "student_choice": "True",
+      "correct_index": 1,
+      "is_correct": false,
+      "difficulty": "Intermediate"
+    },
+    {
+      "timestamp": "2026-09-09T17:14:53.492807+00:00",
+      "type": "completed_quiz",
+      "topic": "Step-Down Electrical Transformer",
+      "difficulty": "Intermediate",
+      "score": 3,
+      "total_questions": 4,
+      "score_pct": 75.0,
+      "details": []
+    },
+    {
+      "timestamp": "2026-09-09T17:14:53.495563+00:00",
+      "type": "single_answer",
+      "topic": "Step-Down Electrical Transformer",
+      "question_id": "q4",
+      "question_text": "If mechanical or electrical load on Mounting Chassis & Enclosure increases significantly, what engineering effect is obs",
+      "student_choice": "Increased internal stress, temperature, or electromagnetic flux across the assembly",
+      "correct_index": 0,
+      "is_correct": true,
+      "difficulty": "Intermediate"
+    },
+    {
+      "timestamp": "2026-09-10T05:17:22.478488+00:00",
+      "type": "single_answer",
+      "topic": "Step-Down Electrical Transformer",
+      "question_id": "q1",
+      "question_text": "In the 3D model of Step-Down Electrical Transformer, which component is described as: \"Sturdy structural steel base plat",
+      "student_choice": "Mounting Chassis & Enclosure",
+      "correct_index": 0,
+      "is_correct": true,
+      "difficulty": "Intermediate"
+    },
+    {
+      "timestamp": "2026-09-10T07:45:12.509093+00:00",
+      "type": "single_answer",
+      "topic": "Automotive Vehicle Chassis and Drivetrain",
+      "question_id": "q1",
+      "question_text": "In the 3D model of Automotive Vehicle Chassis and Drivetrain, which component is described as: \"Main structural backbone",
+      "student_choice": "Internal Combustion Engine",
+      "correct_index": 0,
+      "is_correct": false,
+      "difficulty": "Intermediate"
+    },
+    {
+      "timestamp": "2026-09-10T07:45:18.470496+00:00",
+      "type": "single_answer",
+      "topic": "Automotive Vehicle Chassis and Drivetrain",
+      "question_id": "q2",
+      "question_text": "What is the primary function or energy conversion performed by the Automotive Vehicle Chassis and Drivetrain?",
+      "student_choice": "Controlled physical operation transforming input energy through Ladder Frame Chassis",
+      "correct_index": 0,
+      "is_correct": true,
+      "difficulty": "Intermediate"
+    }
+  ],
+  "last_active": "2026-09-10T07:45:18.470496+00:00"
+}

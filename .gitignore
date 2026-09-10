@@ -1,0 +1,42 @@
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+config/api_keys.json
+.streamlit/secrets.toml
+*.pem
+*.key
+*.cert
+
+# Python & Virtual Environments
+.venv/
+env/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.mypy_cache/
+.pytest_cache/
+
+# Build & Packaging
+build/
+dist/
+*.egg-info/
+*.spec
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Scratch & Temporary
+scratch/
+*.log
+tunnel.log
+tunnel_url.txt
+cloudflared*
+mingit/
+temp/
+tmp/
