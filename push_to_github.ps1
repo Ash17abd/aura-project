@@ -7,7 +7,7 @@ Write-Host " Target: https://github.com/Ash17abd/aura-project" -ForegroundColor 
 Write-Host "==========================================" -ForegroundColor Cyan
 
 & $GitExe branch -M main
-& $GitExe push -u origin main
+& $GitExe push -u origin main --force
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "`n[SUCCESS] Code successfully pushed to GitHub!" -ForegroundColor Green
