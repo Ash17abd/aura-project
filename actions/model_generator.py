@@ -1119,6 +1119,8 @@ CRITICAL ENGINEERING DESIGN & FIDELITY RULES:
         )
 
 
-# Convenience alias
+# Convenience aliases
 ModelGenerator = AIModelGenerator
+Model3DGenerator = AIModelGenerator
+model_generator = AIModelGenerator()
 

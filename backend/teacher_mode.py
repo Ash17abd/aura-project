@@ -120,6 +120,13 @@ Respond with ONLY valid JSON."""
                                 ]
                             parsed["components_breakdown"] = comps
                             parsed["components"] = comps
+                            parsed["level"] = norm_level.capitalize()
+                            parsed["title"] = parsed.get("title", f"{topic} Educational Lesson")
+                            if "sections" not in parsed:
+                                parsed["sections"] = [
+                                    {"title": "Overview", "content": parsed.get("overview", "")},
+                                    {"title": "Working Principles", "content": parsed.get("working_principle", "")},
+                                ]
                             if not parsed.get("working_principle"):
                                 parsed["working_principle"] = f"Governed by physical conservation principles. {explanation}"
                             return parsed
@@ -144,21 +151,31 @@ Respond with ONLY valid JSON."""
             "socratic": f"Consider how each component in {topic} must interact before motion or work can occur."
         }.get(norm_level, f"Operating principles of {topic}.")
 
+        overview_text = (
+            f"{level_text} It is an essential system designed to perform structured energy conversion, "
+            f"physical transformation, or mechanical work. In this interactive 3D model, each element is arranged "
+            f"according to real-world spatial constraints, enabling deep visual inspection."
+        )
+        working_principle_text = (
+            f"Operating principles of {topic} are governed by fundamental physical conservation laws. "
+            f"Input energy travels through interconnected components, transforming velocity, pressure, or electromagnetic potential into target output work. "
+            f"{explanation}"
+        )
+
         return {
             "topic": topic,
+            "title": f"{topic} Comprehensive Lesson",
+            "level": norm_level.capitalize(),
             "pedagogical_level": norm_level.capitalize(),
-            "overview": (
-                f"{level_text} It is an essential system designed to perform structured energy conversion, "
-                f"physical transformation, or mechanical work. In this interactive 3D model, each element is arranged "
-                f"according to real-world spatial constraints, enabling deep visual inspection."
-            ),
+            "overview": overview_text,
             "components_breakdown": comp_breakdown,
             "components": comp_breakdown,
-            "working_principle": (
-                f"Operating principles of {topic} are governed by fundamental physical conservation laws. "
-                f"Input energy travels through interconnected components, transforming velocity, pressure, or electromagnetic potential into target output work. "
-                f"{explanation}"
-            ),
+            "working_principle": working_principle_text,
+            "sections": [
+                {"title": "System Overview", "content": overview_text},
+                {"title": "Operating Principles", "content": working_principle_text},
+                {"title": "Component Mechanics", "content": "; ".join([f"{c['name']}: {c['explanation']}" for c in comp_breakdown[:4]])},
+            ],
             "animation_analysis": f"The dynamic sequence demonstrates operational progression: {anim_desc}",
             "real_world_applications": [
                 f"Industrial manufacturing and automation utilizing {topic}",
@@ -246,7 +263,14 @@ Respond with ONLY valid JSON."""
                     txt = "".join(p.get("text", "") for p in parts if "text" in p).strip()
                     parsed = json.loads(txt.replace("```json", "").replace("```", "").strip())
                     if isinstance(parsed, dict) and "explanation" in parsed:
+                        parsed["status"] = "success"
                         parsed["component_id"] = target_comp.get("id", component_id)
+                        parsed["component_name"] = parsed.get("component_name", c_name)
+                        parsed["component"] = parsed.get("component_name", c_name)
+                        parsed["role"] = parsed.get("role", c_role)
+                        parsed["interactions"] = parsed.get("interactions", f"Interacts with {adjacent_str}")
+                        parsed["failure_mode"] = parsed.get("failure_impact", parsed.get("failure_mode", f"Failure of {c_name} causes systemic instability."))
+                        parsed["failure_impact"] = parsed["failure_mode"]
                         parsed["level"] = norm_level.capitalize()
                         return parsed
             except Exception:
@@ -254,8 +278,10 @@ Respond with ONLY valid JSON."""
 
         # 2. Reliable Heuristic Fallback
         return {
+            "status": "success",
             "component_id": target_comp.get("id", component_id),
             "component_name": c_name,
+            "component": c_name,
             "role": c_role,
             "level": norm_level.capitalize(),
             "explanation": (
@@ -264,6 +290,10 @@ Respond with ONLY valid JSON."""
                 f"necessary for systemic equilibrium."
             ),
             "interactions": f"Operates in direct mechanical, thermal, or electromagnetic conjunction with {adjacent_str}.",
+            "failure_mode": (
+                f"If the {c_name} fails or undergoes excessive wear, the {topic} will experience localized imbalance, "
+                f"reduced efficiency, or complete mechanical seizure."
+            ),
             "failure_impact": (
                 f"If the {c_name} fails or undergoes excessive wear, the {topic} will experience localized imbalance, "
                 f"reduced efficiency, or complete mechanical seizure."

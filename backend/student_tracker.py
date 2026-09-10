@@ -247,23 +247,28 @@ class StudentProgressTracker:
 
         for topic_name, data in topics.items():
             acc = data.get("accuracy_pct", 0.0)
-            attempts = data.get("questions_attempted", 0)
-            if attempts >= 2:
+            attempts = data.get("attempts", data.get("questions_attempted", 0))
+            if attempts >= 1:
                 if acc < 65.0:
                     weak_concepts.append({
                         "topic": topic_name,
+                        "concept": topic_name,
                         "accuracy_pct": acc,
                         "status": "Needs Revision",
                         "weak_areas": data.get("missed_concepts", [topic_name]),
+                        "recommended_model": topic_name,
                     })
                     recommendations.append({
                         "topic": topic_name,
+                        "concept": topic_name,
                         "recommendation": f"Review the operational dynamics and component roles of {topic_name} in the 3D lab.",
-                        "suggested_action": f"Open 3D Model of {topic_name}"
+                        "suggested_action": f"Open 3D Model of {topic_name}",
+                        "recommended_model": topic_name,
                     })
                 elif acc >= 80.0:
                     strong_concepts.append({
                         "topic": topic_name,
+                        "concept": topic_name,
                         "accuracy_pct": acc,
                         "status": "Mastered",
                     })
@@ -371,3 +376,15 @@ class StudentProgressTracker:
 
 # Global singleton instance
 student_tracker = StudentProgressTracker()
+StudentTracker = StudentProgressTracker
+
+def _record_quiz_result_helper(concept, score, total_questions, correct_count=None, student_id=None, missed_components=None):
+    return student_tracker.record_quiz_completion(
+        topic=concept,
+        difficulty="Intermediate",
+        score=int(score if score <= total_questions else (score / 100.0) * total_questions),
+        total_questions=total_questions,
+        details=[{"missed_components": missed_components or []}]
+    )
+
+StudentProgressTracker.record_quiz_result = staticmethod(_record_quiz_result_helper)

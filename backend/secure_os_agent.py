@@ -276,6 +276,25 @@ class SecureOSAgent:
 secure_agent = SecureOSAgent()
 
 
+def execute_local_action(action: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
+    """
+    Executes a validated local OS action.
+    Strictly gated if running in a cloud deployment (AURA_CLOUD_DEPLOYED=1).
+    """
+    if os.getenv("AURA_CLOUD_DEPLOYED") == "1" or os.getenv("AURA_DISABLE_LOCAL_OS") == "1":
+        return {
+            "success": False,
+            "status": "BLOCKED",
+            "message": "Cloud Environment Security Gate: Local OS execution is disabled in cloud deployments to protect host infrastructure.",
+        }
+    cmd = action
+    if params and "app_name" in params:
+        cmd = f"open {params['app_name']}"
+    elif params and "command" in params:
+        cmd = params["command"]
+    return secure_agent.execute_command(cmd)
+
+
 if __name__ == "__main__":
     import sys
     print("=" * 60)

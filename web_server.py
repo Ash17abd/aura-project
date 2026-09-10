@@ -703,11 +703,14 @@ def analyze_material_endpoint(req: AnalyzeMaterialRequest):
     formatted_topics = [{"topic": t, "explanation": exp} for t, exp in topics_list]
     primary_topic = formatted_topics[0]["topic"] if formatted_topics else "Engineering Concept"
     return {
+        "status": "success",
         "filename": req.filename or "direct_text.txt",
         "char_count": len(txt),
         "text_preview": txt[:1000] + ("..." if len(txt) > 1000 else ""),
         "full_text": txt[:25000],
         "topics": formatted_topics,
+        "key_concepts": [t["topic"] for t in formatted_topics] if formatted_topics else ["Engineering Principles"],
+        "recommended_3d_model": primary_topic,
         "visualization_plan": f"Constructing interactive 3D model representation for {primary_topic}.",
         "source": "Text/Document Analysis"
     }
