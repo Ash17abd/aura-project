@@ -1,0 +1,13 @@
+[build]
+  publish = "web"
+  command = "mkdir -p web/static dist/static && cp web/index.html dist/ && cp web/style.css web/app.js dist/ && cp web/style.css web/app.js dist/static/ && cp web/style.css web/app.js web/static/"
+
+[[redirects]]
+  from = "/static/*"
+  to = "/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
