@@ -1,0 +1,9 @@
+{
+  "name": "aura-3d-learning-lab",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Autonomous AI-Powered Interactive 3D Science & Engineering Learning Platform",
+  "scripts": {
+    "build": "mkdir -p web/static dist/static && cp web/index.html dist/ && cp web/style.css web/app.js dist/ && cp web/style.css web/app.js dist/static/ && cp web/style.css web/app.js web/static/"
+  }
+}
