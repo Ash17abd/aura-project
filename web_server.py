@@ -21,6 +21,12 @@ import time
 from pathlib import Path
 from typing import Any, Optional
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    pass
+
 import psutil
 import requests
 from fastapi import FastAPI, File, HTTPException, UploadFile
